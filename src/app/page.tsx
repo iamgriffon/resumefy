@@ -1,7 +1,7 @@
-"use client"
+import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 
-import { ResumeBuilder } from "@/components/resume/ResumeBuilder"
-
-export default function SyntheticV0PageForDeployment() {
-  return <ResumeBuilder />
+export default async function HomePage() {
+  const locale = await getLocale();
+  redirect(`/${locale}`);
 }

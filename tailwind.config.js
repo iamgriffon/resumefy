@@ -1,6 +1,3 @@
-const { fontFamily } = require("tailwindcss/defaultTheme");
-const { newYorkTheme } = require("./src/styles/theme");
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],

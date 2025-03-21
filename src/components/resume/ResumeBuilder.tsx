@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { useToast } from "@/components/ui/use-toast";
+import { useTranslations, useLocale } from 'next-intl';
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { parseResumeFile, type ResumeData } from '@/lib/file-parser';
@@ -10,9 +10,11 @@ import { generateResumePDF } from '@/lib/pdf-generator';
 import { ResumePreviewer } from '@/components/resume/ResumePreviewer';
 
 export function ResumeBuilder() {
-  const t = useTranslations('resume');
   const common = useTranslations('common');
   const { toast } = useToast();
+  const locale = useLocale();
+
+  console.log(locale);
   
   const [file, setFile] = useState<File | null>(null);
   const [resumeData, setResumeData] = useState<ResumeData | null>(null);
@@ -65,7 +67,24 @@ export function ResumeBuilder() {
     setLoading(true);
     
     try {
-      const blob = await generateResumePDF(resumeData, 'resume-preview');
+      const pdf = await generateResumePDF({
+        personalInfo: {
+          fullName: resumeData.personal.name,
+          email: resumeData.personal.email,
+          phone: resumeData.personal.phone,
+          location: resumeData.personal.location,
+          linkedIn: resumeData.personal.linkedIn,
+          summary: resumeData.personal.summary
+        },
+        skills: resumeData.skills,
+        education: resumeData.education,
+        experience: resumeData.experience,
+        certifications: resumeData.certifications || [],
+        additionalInfo: resumeData.additionalInfo
+      }, locale);
+      
+      // Convert jsPDF to Blob
+      const blob = pdf.output('blob');
       const url = URL.createObjectURL(blob);
       
       // Create download link

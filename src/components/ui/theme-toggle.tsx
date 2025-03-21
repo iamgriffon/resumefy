@@ -1,25 +1,29 @@
-"use client"
+"use client";
 
-import { Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import React, { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import { SunIcon, MoonIcon } from "lucide-react";
+import { Button } from "./button";
+export function ThemeToggle() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-import { Button } from "./button"
-import { cn } from "../../lib/utils"
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-export function ThemeToggle({ className }: { className?: string }) {
-  const { setTheme, theme } = useTheme()
+  if (!mounted) return null;
 
+  const isDark = theme === "dark";
+  
+  const Component = {
+    light: <SunIcon className="dark:hover:text-white" />,
+    dark: <MoonIcon className="dark:hover:text-black" />,
+  }
+  
   return (
-    <Button 
-      variant="outline" 
-      size="icon" 
-      onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-      className={cn("rounded-full", className)}
-    >
-      <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-      <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-      <span className="sr-only">Toggle theme</span>
+    <Button variant="outline" className="w-10 h-10 p-2 rounded-full border-none max-md:w-8 max-md:h-8" size="icon" onClick={() => setTheme(isDark ? "light" : "dark")}>
+      {Component[theme as keyof typeof Component]}
     </Button>
-  )
+  );
 }
-

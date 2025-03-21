@@ -5,6 +5,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import type { Viewport } from "next";
 import type { Metadata } from "next";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Resumefy",
@@ -33,15 +34,19 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-  params: { locale },
 }: {
   children: React.ReactNode;
-  params: { locale: string };
 }) {
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.className} ${geistSans.variable} ${geistMono.variable} min-h-screen bg-background dark:bg-background`}
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          "bg-gradient-to-br from-white to-neutral-400 dark:from-neutral-900 dark:to-black",
+          inter.className,
+          geistSans.variable,
+          geistMono.variable
+        )}
       >
         <ThemeProvider
           attribute="class"

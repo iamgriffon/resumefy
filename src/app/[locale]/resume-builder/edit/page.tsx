@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { CVForm } from "@/components/resume/CVForm";
 import { useTranslations } from "next-intl";
 import { CVFormType } from "@/components/resume/schemas";
@@ -10,7 +10,6 @@ export default function ResumeEditPage() {
   const [loading, setLoading] = useState(true);
   const t = useTranslations("ResumeBuilder");
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const savedData = localStorage.getItem("importedCVData");
@@ -29,6 +28,7 @@ export default function ResumeEditPage() {
   const handleSubmit = (formData: CVFormType) => {
     console.log({ formData });
     localStorage.setItem("importedCVData", JSON.stringify(formData));
+    localStorage.setItem("resumeData", JSON.stringify(formData));
 
     // Redirect back to preview
     router.push("/en/resume-builder/preview");
@@ -44,7 +44,7 @@ export default function ResumeEditPage() {
 
   if (!resumeData) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="w-full max-w-3xl mx-auto py-8">
         <h1 className="text-2xl font-bold mb-4">{t("noResumeData")}</h1>
         <p>{t("startFresh")}</p>
         <button
@@ -58,8 +58,7 @@ export default function ResumeEditPage() {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">{t("editResume")}</h1>
+    <div className="w-full max-w-3xl mx-auto py-8">
       <CVForm
         initialData={resumeData}
         onSubmit={handleSubmit}

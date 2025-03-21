@@ -1,4 +1,3 @@
-import Papa from 'papaparse';
 import { CVFormType } from '@/components/resume/schemas';
 
 export async function parseCSV<T>(file: File): Promise<T> {

@@ -1,24 +1,27 @@
 "use client";
 
-import { useState } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cvFormSchema, CVFormType } from "./schemas";
 import { useTranslations } from "use-intl";
-import { generateResumePDF } from '@/lib/pdf-generator';
-import type { ResumeData } from '@/lib/file-parser';
-import { ResumePreviewer } from "@/components/resume/ResumePreviewer";
-
+import { generateResumePDF } from "@/lib/pdf-generator";
+import { MonthYearPicker } from "@/components/ui/date-picker";
+import {
+  SaveIcon,
+  ChevronDown,
+  ChevronUp,
+  MinimizeIcon,
+  MaximizeIcon,
+} from "lucide-react";
+import { Checkbox } from "../ui/checkbox";
+import React, { useState, useMemo, useCallback } from "react";
+import { usePathname } from "next/navigation";
+import { FormCard } from "./cv-form/form-card";
 export function CVForm({
   initialData,
   onSubmit,
@@ -28,9 +31,6 @@ export function CVForm({
   onSubmit?: (data: CVFormType) => void;
   submitLabel?: string;
 }) {
-
-  console.log({initialData});
-
   const {
     register,
     handleSubmit,
@@ -45,56 +45,103 @@ export function CVForm({
         phone: initialData?.personalInfo?.phone || "",
         location: initialData?.personalInfo?.location || "",
         linkedIn: initialData?.personalInfo?.linkedIn || "",
-        summary: initialData?.personalInfo?.summary || ""
+        summary: initialData?.personalInfo?.summary || "",
       },
       education: initialData?.education || [],
       experience: initialData?.experience || [],
       skills: { skills: initialData?.skills?.skills || "" },
       certifications: initialData?.certifications || [],
-      additionalInfo: initialData?.additionalInfo || ""
-    }
+      additionalInfo: initialData?.additionalInfo || "",
+    },
   });
 
-  const { 
-    fields: educationFields, 
-    append: appendEducation 
+  const {
+    fields: educationFields,
+    append: appendEducation,
+    remove: removeEducation,
   } = useFieldArray({
     control,
-    name: "education"
+    name: "education",
   });
 
-  const { 
-    fields: experienceFields, 
-    append: appendExperience 
+  const {
+    fields: experienceFields,
+    append: appendExperience,
+    remove: removeExperience,
   } = useFieldArray({
     control,
-    name: "experience"
+    name: "experience",
   });
 
-  const { 
-    fields: certificationFields, 
-    append: appendCertification 
+  const {
+    fields: certificationFields,
+    append: appendCertification,
+    remove: removeCertification,
   } = useFieldArray({
     control,
-    name: "certifications"
+    name: "certifications",
   });
 
-  const [previewData, setPreviewData] = useState<ResumeData | null>(null);
   const t = useTranslations("resume");
+  const pathname = usePathname();
+
+  const parseDate = (dateStr: string | undefined): Date | undefined => {
+    if (!dateStr) return undefined;
+
+    const parsedDate = new Date(dateStr);
+    return isNaN(parsedDate.getTime()) ? undefined : parsedDate;
+  };
+
+  const getCurrentDate = () => new Date().toISOString().split("T")[0];
+
+  const [collapsedSections, setCollapsedSections] = useState<
+    Record<string, boolean>
+  >({
+    personalInfo: false,
+    education: false,
+    experience: false,
+    skills: false,
+    certifications: false,
+  });
+
+  const toggleSection = useCallback(
+    (section: string) => {
+      setCollapsedSections({
+        ...collapsedSections,
+        [section]: !collapsedSections[section],
+      });
+    },
+    [collapsedSections]
+  );
+
+  const toggleAllSections = useCallback(
+    (collapse: boolean) => {
+      setCollapsedSections({
+        personalInfo: collapse,
+        education: collapse,
+        experience: collapse,
+        skills: collapse,
+        certifications: collapse,
+      });
+    },
+    [collapsedSections]
+  );
+
+  const isAllSectionsCollapsed = useMemo(() => {
+    return Object.values(collapsedSections).every((value) => value);
+  }, [collapsedSections]);
 
   const submit = (data: CVFormType) => {
     if (onSubmit) {
       try {
-        // Only try to generate PDF if we're in the preview/confirm flow
         if (submitLabel === "Confirm & Download") {
           generateResumePDF(data)
-            .then(pdf => {
-              pdf.save(`${data.personalInfo?.fullName || 'resume'}.pdf`);
+            .then((pdf) => {
+              pdf.save(`${data.personalInfo?.fullName || "resume"}.pdf`);
               onSubmit(data);
             })
-            .catch(err => {
-              console.error('Failed to generate PDF:', err);
-              // Still call onSubmit even if PDF generation fails
+            .catch((err) => {
+              console.error("Failed to generate PDF:", err);
               onSubmit(data);
             });
         } else {
@@ -102,26 +149,50 @@ export function CVForm({
           onSubmit(data);
         }
       } catch (error) {
-        console.error('Error in form submission:', error);
+        console.error("Error in form submission:", error);
         onSubmit(data);
       }
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="space-y-8">
-      <Card data-testid="personal-info-card">
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent>
+    <React.Fragment>
+      <article className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">
+          {pathname === "/en/resume-builder/edit"
+            ? t("editResume")
+            : t("createResume")}
+        </h1>
+        <div className="flex justify-end gap-2 mb-4">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => toggleAllSections(!isAllSectionsCollapsed)}
+          >
+            {isAllSectionsCollapsed ? (
+              <MaximizeIcon className="h-4 w-4 mr-1" />
+            ) : (
+              <MinimizeIcon className="h-4 w-4 mr-1" />
+            )}
+            {isAllSectionsCollapsed ? t("expandAll") : t("collapseAll")}
+          </Button>
+        </div>
+      </article>
+      <form onSubmit={handleSubmit(submit)} className="space-y-8">
+        <FormCard
+          title={t("personalInfo")}
+          onToggle={() => toggleSection("personalInfo")}
+          isCollapsed={collapsedSections.personalInfo}
+          testId="personal-info-card"
+        >
           <div className="mb-4">
-            <Label 
-              htmlFor="fullName" 
-              className="mb-1 block"
+            <Label
+              htmlFor="fullName"
+              className="mb-2 block"
               data-testid="fullName-label"
             >
-              Full Name
+              {t("fullName")}
             </Label>
             <Input
               id="fullName"
@@ -137,12 +208,12 @@ export function CVForm({
           </div>
 
           <div className="mb-4">
-            <Label 
-              htmlFor="email" 
-              className="mb-1 block"
+            <Label
+              htmlFor="email"
+              className="mb-2 block"
               data-testid="email-label"
             >
-              Email
+              {t("email")}
             </Label>
             <Input
               id="email"
@@ -159,12 +230,12 @@ export function CVForm({
           </div>
 
           <div className="mb-4">
-            <Label 
-              htmlFor="phone" 
-              className="mb-1 block"
+            <Label
+              htmlFor="phone"
+              className="mb-2 block"
               data-testid="phone-label"
             >
-              Phone
+              {t("phone")}
             </Label>
             <Input
               id="phone"
@@ -180,12 +251,12 @@ export function CVForm({
           </div>
 
           <div className="mb-4">
-            <Label 
-              htmlFor="location" 
-              className="mb-1 block"
+            <Label
+              htmlFor="location"
+              className="mb-2 block"
               data-testid="location-label"
             >
-              Location
+              {t("location")}
             </Label>
             <Input
               id="location"
@@ -201,12 +272,12 @@ export function CVForm({
           </div>
 
           <div className="mb-4">
-            <Label 
-              htmlFor="summary" 
-              className="mb-1 block"
+            <Label
+              htmlFor="summary"
+              className="mb-2 block"
               data-testid="summary-label"
             >
-              Professional Summary
+              {t("summary")}
             </Label>
             <Textarea
               id="summary"
@@ -224,7 +295,7 @@ export function CVForm({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="linkedIn">LinkedIn</Label>
+              <Label htmlFor="linkedIn">{t("linkedin")}</Label>
               <Input
                 id="linkedIn"
                 {...register("personalInfo.linkedIn")}
@@ -233,23 +304,35 @@ export function CVForm({
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </FormCard>
 
-      <Card data-testid="education-card">
-        <CardHeader>
-          <CardTitle>Education</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <FormCard
+          testId="education-card"
+          title={t("education")}
+          onToggle={() => toggleSection("education")}
+          isCollapsed={collapsedSections.education}
+        >
           {educationFields.map((field, index) => (
             <div key={field.id} className="mb-6 p-4 border rounded-md">
+              <Button
+                type="button"
+                variant="destructive"
+                size="sm"
+                className="absolute top-2 right-2"
+                onClick={() => removeEducation(index)}
+                disabled={educationFields.length === 1}
+                aria-label="Remove education entry"
+              >
+                ✕
+              </Button>
+
               <div className="mb-4">
-                <Label 
-                  htmlFor={`education-${index}-institution`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`education-${index}-institution`}
+                  className="mb-2 block"
                   data-testid={`education-${index}-institution-label`}
                 >
-                  Institution
+                  {t("institution")}
                 </Label>
                 <Input
                   id={`education-${index}-institution`}
@@ -265,12 +348,12 @@ export function CVForm({
               </div>
 
               <div className="mb-4">
-                <Label 
-                  htmlFor={`education-${index}-degree`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`education-${index}-degree`}
+                  className="mb-2 block"
                   data-testid={`education-${index}-degree-label`}
                 >
-                  Degree
+                  {t("degree")}
                 </Label>
                 <Input
                   id={`education-${index}-degree`}
@@ -286,12 +369,12 @@ export function CVForm({
               </div>
 
               <div className="mb-4">
-                <Label 
-                  htmlFor={`education-${index}-fieldOfStudy`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`education-${index}-fieldOfStudy`}
+                  className="mb-2 block"
                   data-testid={`education-${index}-fieldOfStudy-label`}
                 >
-                  Field of Study
+                  {t("fieldOfStudy")}
                 </Label>
                 <Input
                   id={`education-${index}-fieldOfStudy`}
@@ -308,18 +391,33 @@ export function CVForm({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="mb-4">
-                  <Label 
-                    htmlFor={`education-${index}-startDate`} 
-                    className="mb-1 block"
+                  <Label
+                    htmlFor={`education-${index}-startDate`}
+                    className="mb-2 block"
                     data-testid={`education-${index}-startDate-label`}
                   >
-                    Start Date
+                    {t("startDate")}
                   </Label>
-                  <Input
-                    id={`education-${index}-startDate`}
-                    data-testid={`education-${index}-startDate-input`}
-                    {...register(`education.${index}.startDate` as const)}
-                    className="w-full"
+                  <Controller
+                    control={control}
+                    name={`education.${index}.startDate` as const}
+                    render={({ field }) => (
+                      <MonthYearPicker
+                        id={`education-${index}-startDate`}
+                        value={
+                          parseDate(field.value) ||
+                          parseDate(new Date().toISOString().split("T")[0])
+                        }
+                        onChange={(date) => {
+                          console.log(date);
+                          field.onChange(
+                            date ? date.toISOString().split("T")[0] : ""
+                          );
+                        }}
+                        placeholder={t("selectStartDate")}
+                        data-testid={`education-${index}-startDate-input`}
+                      />
+                    )}
                   />
                   {errors.education?.[index]?.startDate && (
                     <div className="text-red-500 text-sm mt-1">
@@ -329,18 +427,35 @@ export function CVForm({
                 </div>
 
                 <div className="mb-4">
-                  <Label 
-                    htmlFor={`education-${index}-endDate`} 
-                    className="mb-1 block"
-                    data-testid={`education-${index}-endDate-label`}
-                  >
-                    End Date
-                  </Label>
-                  <Input
-                    id={`education-${index}-endDate`}
-                    data-testid={`education-${index}-endDate-input`}
-                    {...register(`education.${index}.endDate` as const)}
-                    className="w-full"
+                  <div className="flex items-start justify-between">
+                    <Label
+                      htmlFor={`education-${index}-endDate`}
+                      className="mb-2 block"
+                      data-testid={`education-${index}-endDate-label`}
+                    >
+                      {t("endDate")}
+                    </Label>
+                  </div>
+                  <Controller
+                    control={control}
+                    name={`education.${index}.endDate` as const}
+                    render={({ field }) => (
+                      <MonthYearPicker
+                        disabled={field.value === "present"}
+                        id={`education-${index}-endDate`}
+                        value={
+                          parseDate(field.value) ||
+                          parseDate(new Date().toISOString().split("T")[0])
+                        }
+                        onChange={(date) =>
+                          field.onChange(
+                            date ? date.toISOString().split("T")[0] : ""
+                          )
+                        }
+                        placeholder={t("selectEndDate")}
+                        data-testid={`education-${index}-endDate-input`}
+                      />
+                    )}
                   />
                   {errors.education?.[index]?.endDate && (
                     <div className="text-red-500 text-sm mt-1">
@@ -351,14 +466,15 @@ export function CVForm({
               </div>
 
               <div className="mb-4">
-                <Label 
-                  htmlFor={`education-${index}-description`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`education-${index}-description`}
+                  className="mb-2 block"
                   data-testid={`education-${index}-description-label`}
                 >
-                  Description
+                  {t("description")}
                 </Label>
                 <Textarea
+                  required
                   id={`education-${index}-description`}
                   data-testid={`education-${index}-description-input`}
                   {...register(`education.${index}.description` as const)}
@@ -371,39 +487,67 @@ export function CVForm({
                   </div>
                 )}
               </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                <Controller
+                  control={control}
+                  name={`education.${index}.endDate` as const}
+                  render={({ field: endDateField }) => (
+                    <Checkbox
+                      id={`education-${index}-present`}
+                      checked={
+                        typeof endDateField.value === "string" &&
+                        endDateField.value.toLowerCase() === "present"
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          endDateField.onChange("present");
+                        } else {
+                          endDateField.onChange(field.endDate);
+                        }
+                      }}
+                    />
+                  )}
+                />
+                <p className="text-sm">{t("currentlyStudying")}</p>
+              </div>
             </div>
           ))}
           <Button
             type="button"
             variant="outline"
-            onClick={() => appendEducation({ 
-              institution: "", 
-              degree: "", 
-              fieldOfStudy: "", 
-              startDate: "", 
-              endDate: "", 
-              description: "" 
-            })}
+            className="my-4"
+            size="sm"
+            onClick={() =>
+              appendEducation({
+                institution: "",
+                degree: "",
+                fieldOfStudy: "",
+                startDate: getCurrentDate(),
+                endDate: getCurrentDate(),
+                description: "",
+              })
+            }
           >
-            Add Education
+            {t("addEducation")}
           </Button>
-        </CardContent>
-      </Card>
+        </FormCard>
 
-      <Card data-testid="experience-card">
-        <CardHeader>
-          <CardTitle>Work Experience</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <FormCard
+          testId="experience-card"
+          title={t("experience")}
+          onToggle={() => toggleSection("experience")}
+          isCollapsed={collapsedSections.experience}
+        >
           {experienceFields.map((field, index) => (
-            <div key={field.id} className="mb-6 p-4 border rounded-md">
+            <div key={field.id} className="mb-6 p-4 border rounded-md relative">
               <div className="mb-4">
-                <Label 
-                  htmlFor={`experience-${index}-company`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`experience-${index}-company`}
+                  className="mb-2 block"
                   data-testid={`experience-${index}-company-label`}
                 >
-                  Company
+                  {t("company")}
                 </Label>
                 <Input
                   id={`experience-${index}-company`}
@@ -419,12 +563,12 @@ export function CVForm({
               </div>
 
               <div className="mb-4">
-                <Label 
-                  htmlFor={`experience-${index}-position`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`experience-${index}-position`}
+                  className="mb-2 block"
                   data-testid={`experience-${index}-position-label`}
                 >
-                  Position
+                  {t("position")}
                 </Label>
                 <Input
                   id={`experience-${index}-position`}
@@ -441,18 +585,32 @@ export function CVForm({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="mb-4">
-                  <Label 
-                    htmlFor={`experience-${index}-startDate`} 
-                    className="mb-1 block"
+                  <Label
+                    htmlFor={`experience-${index}-startDate`}
+                    className="mb-2 block"
                     data-testid={`experience-${index}-startDate-label`}
                   >
-                    Start Date
+                    {t("startDate")}
                   </Label>
-                  <Input
-                    id={`experience-${index}-startDate`}
-                    data-testid={`experience-${index}-startDate-input`}
-                    {...register(`experience.${index}.startDate` as const)}
-                    className="w-full"
+                  <Controller
+                    control={control}
+                    name={`experience.${index}.startDate` as const}
+                    render={({ field }) => (
+                      <MonthYearPicker
+                        id={`experience-${index}-startDate`}
+                        value={
+                          parseDate(field.value) ||
+                          parseDate(new Date().toISOString().split("T")[0])
+                        }
+                        onChange={(date) =>
+                          field.onChange(
+                            date ? date.toISOString().split("T")[0] : ""
+                          )
+                        }
+                        placeholder={t("selectStartDate")}
+                        data-testid={`experience-${index}-startDate-input`}
+                      />
+                    )}
                   />
                   {errors.experience?.[index]?.startDate && (
                     <div className="text-red-500 text-sm mt-1">
@@ -462,18 +620,35 @@ export function CVForm({
                 </div>
 
                 <div className="mb-4">
-                  <Label 
-                    htmlFor={`experience-${index}-endDate`} 
-                    className="mb-1 block"
-                    data-testid={`experience-${index}-endDate-label`}
-                  >
-                    End Date
-                  </Label>
-                  <Input
-                    id={`experience-${index}-endDate`}
-                    data-testid={`experience-${index}-endDate-input`}
-                    {...register(`experience.${index}.endDate` as const)}
-                    className="w-full"
+                  <div className="flex items-start justify-between">
+                    <Label
+                      htmlFor={`experience-${index}-endDate`}
+                      className="mb-2 block"
+                      data-testid={`experience-${index}-endDate-label`}
+                    >
+                      {t("endDate")}
+                    </Label>
+                  </div>
+                  <Controller
+                    control={control}
+                    name={`experience.${index}.endDate` as const}
+                    render={({ field }) => (
+                      <MonthYearPicker
+                        disabled={field.value === "present"}
+                        id={`experience-${index}-endDate`}
+                        value={
+                          parseDate(field.value) ||
+                          parseDate(new Date().toISOString().split("T")[0])
+                        }
+                        onChange={(date) =>
+                          field.onChange(
+                            date ? date.toISOString().split("T")[0] : ""
+                          )
+                        }
+                        placeholder={t("selectEndDate")}
+                        data-testid={`experience-${index}-endDate-input`}
+                      />
+                    )}
                   />
                   {errors.experience?.[index]?.endDate && (
                     <div className="text-red-500 text-sm mt-1">
@@ -484,12 +659,12 @@ export function CVForm({
               </div>
 
               <div className="mb-4">
-                <Label 
-                  htmlFor={`experience-${index}-description`} 
-                  className="mb-1 block"
+                <Label
+                  htmlFor={`experience-${index}-description`}
+                  className="mb-2 block"
                   data-testid={`experience-${index}-description-label`}
                 >
-                  Description
+                  {t("description")}
                 </Label>
                 <Textarea
                   id={`experience-${index}-description`}
@@ -504,139 +679,220 @@ export function CVForm({
                   </div>
                 )}
               </div>
+              <div className="flex items-center gap-2 mt-2">
+                <Controller
+                  control={control}
+                  name={`experience.${index}.endDate` as const}
+                  render={({ field: endDateField }) => (
+                    <Checkbox
+                      id={`experience-${index}-present`}
+                      checked={
+                        typeof endDateField.value === "string" &&
+                        endDateField.value.toLowerCase() === "present"
+                      }
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          endDateField.onChange("present");
+                        } else {
+                          endDateField.onChange(field.endDate);
+                        }
+                      }}
+                    />
+                  )}
+                />
+                <p className="text-sm">{t("currentlyWorking")}</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4"
+                size="sm"
+                onClick={() => removeExperience(index)}
+                disabled={experienceFields.length === 1}
+                aria-label="Remove experience entry"
+              >
+                {t("remove")}
+              </Button>
             </div>
           ))}
           <Button
             type="button"
             variant="outline"
-            onClick={() => appendExperience({ 
-              company: "", 
-              position: "", 
-              startDate: "", 
-              endDate: "", 
-              description: "" 
-            })}
+            className="my-4"
+            size="sm"
+            onClick={() =>
+              appendExperience({
+                company: "",
+                position: "",
+                startDate: getCurrentDate(),
+                endDate: getCurrentDate(),
+                description: "",
+              })
+            }
           >
-            Add Experience
+            {t("addExperience")}
           </Button>
-        </CardContent>
-      </Card>
-
-      <Card data-testid="skills-card">
-        <CardHeader>
-          <CardTitle>Skills</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <Label 
-              htmlFor="skills" 
-              className="mb-1 block"
-              data-testid="skills-label"
-            >
-              Skills (separate with commas)
-            </Label>
-            <Textarea
-              id="skills"
-              data-testid="skills-input"
-              {...register("skills.skills")}
-              className="w-full"
-              rows={4}
-            />
-            {errors.skills?.skills && (
-              <div className="text-red-500 text-sm mt-1">
-                {errors.skills.skills.message}
+        </FormCard>
+        <FormCard
+          testId="skills-card"
+          title={t("skills")}
+          onToggle={() => toggleSection("skills")}
+          isCollapsed={collapsedSections.skills}
+        >
+          <Textarea
+            id="skills"
+            data-testid="skills-input"
+            {...register("skills.skills")}
+            className="w-full"
+            rows={4}
+          />
+        </FormCard>
+        <FormCard
+          testId="certifications-card"
+          title={t("certifications")}
+          onToggle={() => toggleSection("certifications")}
+          isCollapsed={collapsedSections.certifications}
+        >
+          {certificationFields.map((field, index) => (
+            <Card key={field.id} className="p-4 not-last:mb-6">
+              <div className="mb-4">
+                <Label
+                  htmlFor={`certification-${index}-name`}
+                  className="mb-2 block"
+                  data-testid={`certification-${index}-name-label`}
+                >
+                  {t("certificationName")}
+                </Label>
+                <Input
+                  id={`certification-${index}-name`}
+                  data-testid={`certification-${index}-name-input`}
+                  {...register(`certifications.${index}.name` as const)}
+                  className="w-full"
+                />
+                {errors.certifications?.[index]?.name && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {errors.certifications[index]?.name?.message}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
-      <div className="space-y-4 mt-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">{t("certifications")}</h3>
+              <div className="mb-4">
+                <Label
+                  htmlFor={`certification-${index}-issuer`}
+                  className="mb-2 block"
+                  data-testid={`certification-${index}-issuer-label`}
+                >
+                  {t("issuer")}
+                </Label>
+                <Input
+                  id={`certification-${index}-issuer`}
+                  data-testid={`certification-${index}-issuer-input`}
+                  {...register(`certifications.${index}.issuer` as const)}
+                  className="w-full"
+                />
+                {errors.certifications?.[index]?.issuer && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {errors.certifications[index]?.issuer?.message}
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <Label
+                  htmlFor={`certification-${index}-issueDate`}
+                  className="mb-2 block"
+                  data-testid={`certification-${index}-issueDate-label`}
+                >
+                  {t("issueDate")}
+                </Label>
+                <Controller
+                  control={control}
+                  name={`certifications.${index}.date` as const}
+                  render={({ field }) => (
+                    <MonthYearPicker
+                      id={`certification-${index}-issueDate`}
+                      value={parseDate(field.value as string)}
+                      onChange={(date) =>
+                        field.onChange(
+                          date ? date.toISOString().split("T")[0] : ""
+                        )
+                      }
+                      placeholder={t("selectIssueDate")}
+                      data-testid={`certification-${index}-issueDate-input`}
+                    />
+                  )}
+                />
+                {errors.certifications?.[index]?.date && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {errors.certifications[index]?.date?.message}
+                  </div>
+                )}
+              </div>
+
+              <div className="mb-4">
+                <Label
+                  htmlFor={`certification-${index}-expirationDate`}
+                  className="mb-2 block"
+                  data-testid={`certification-${index}-expirationDate-label`}
+                >
+                  {t("expirationDate")}
+                </Label>
+                <Controller
+                  control={control}
+                  name={`certifications.${index}.expires` as const}
+                  render={({ field }) => (
+                    <MonthYearPicker
+                      id={`certification-${index}-expirationDate`}
+                      value={parseDate(field.value as string)}
+                      onChange={(date) =>
+                        field.onChange(
+                          date ? date.toISOString().split("T")[0] : ""
+                        )
+                      }
+                      placeholder={t("selectExpirationDate")}
+                      data-testid={`certification-${index}-expirationDate-input`}
+                    />
+                  )}
+                />
+                {errors.certifications?.[index]?.expires && (
+                  <div className="text-red-500 text-sm mt-1">
+                    {errors.certifications[index]?.expires?.message}
+                  </div>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => removeCertification(index)}
+                disabled={certificationFields.length === 1}
+                aria-label="Remove certification entry"
+              >
+                {t("remove")}
+              </Button>
+            </Card>
+          ))}
           <Button
             type="button"
             variant="outline"
-            size="sm"
-            onClick={() => appendCertification({
-              name: "",
-              issuer: "",
-              date: "",
-              expires: ""
-            })}
+            className="mt-4"
+            onClick={() =>
+              appendCertification({
+                name: "",
+                issuer: "",
+                date: getCurrentDate(),
+                expires: getCurrentDate(),
+              })
+            }
           >
-            Add Certification
+            {t("addCertification")}
           </Button>
-        </div>
-        
-        {certificationFields.map((field, index) => (
-          <Card key={field.id} className="p-4 relative">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor={`certifications.${index}.name`}>
-                  Certification Name
-                </Label>
-                <Input
-                  id={`certifications.${index}.name`}
-                  {...register(`certifications.${index}.name`)}
-                  data-testid={`certification-${index}-name-input`}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`certifications.${index}.issuer`}>
-                  Issuing Organization
-                </Label>
-                <Input
-                  id={`certifications.${index}.issuer`}
-                  {...register(`certifications.${index}.issuer`)}
-                  data-testid={`certification-${index}-issuer-input`}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`certifications.${index}.date`}>
-                  Date Issued
-                </Label>
-                <Input
-                  id={`certifications.${index}.date`}
-                  {...register(`certifications.${index}.date`)}
-                  data-testid={`certification-${index}-date-input`}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={`certifications.${index}.expires`}>
-                  Expiration Date (Optional)
-                </Label>
-                <Input
-                  id={`certifications.${index}.expires`}
-                  {...register(`certifications.${index}.expires`)}
-                  data-testid={`certification-${index}-expires-input`}
-                />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <div className="space-y-2 mt-6">
-        <Label htmlFor="additionalInfo">Additional Information</Label>
-        <Textarea
-          id="additionalInfo"
-          {...register("additionalInfo")}
-          placeholder="Any other relevant information"
-          rows={4}
-          data-testid="additionalInfo-input"
-        />
-      </div>
-
-      <div className="flex justify-end mt-6">
-        <Button type="submit" variant="destructive" data-testid="cv-form-submit-button">{submitLabel}</Button>
-      </div>
-
-      {previewData && (
-        <div id="resume-preview" style={{ position: 'absolute', left: '-9999px' }}>
-          <ResumePreviewer data={previewData} />
-        </div>
-      )}
-    </form>
+        </FormCard>
+        <Button variant="outline" className="w-full" type="submit">
+          <SaveIcon className="w-4 h-4 mr-2" />
+          {submitLabel || t("submit")}
+        </Button>
+      </form>
+    </React.Fragment>
   );
 }

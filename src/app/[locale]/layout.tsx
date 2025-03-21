@@ -1,30 +1,35 @@
-import { NextIntlClientProvider } from "next-intl"
-import { notFound } from "next/navigation"
-import { locales } from "@/i18n"
-import type { ReactNode } from "react"
-import { Header } from "@/components/layout/Header"
-import { getMessages } from "@/i18n"
+import { NextIntlClientProvider } from "next-intl";
+import { notFound } from "next/navigation";
+import { locales, getMessages } from "@/i18n";
+import { ReactNode } from "react";
+import { Header } from "@/components/layout/Header";
 
 interface LocaleLayoutProps {
-  children: ReactNode
+  children: ReactNode;
   params: {
-    locale: string
-  }
-}
+    locale: string;
+  };
+};
 
-export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
-  const { locale } = await params
+export default async function LocaleLayout({
+  children,
+  params,
+}: LocaleLayoutProps) {
+  const { locale } = await params;
 
   if (!locale || !locales.includes(locale)) {
-    notFound()
+    notFound();
   }
-  const messages = await getMessages(locale)
+  const messages = await getMessages(locale);
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      <Header />
-      <main className="w-full h-full overflow-x-hidden overflow-y-auto px-2 sm:px-4">{children}</main>
+      <div className="min-h-screen flex flex-col">
+        <nav className="flex justify-between items-center">
+          <Header />
+        </nav>
+        <main className="flex-1">{children}</main>
+      </div>
     </NextIntlClientProvider>
-  )
+  );
 }
-

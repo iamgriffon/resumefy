@@ -3,12 +3,60 @@ import html2canvas from "html2canvas";
 import { CVFormType } from "@/components/resume/schemas";
 import { formatDate } from "./utils";
 import { parse } from "date-fns";
+
+// Resume translations mapping for multiple locales
+const resumeTranslations: Record<string, Record<string, string>> = {
+  en: {
+    professionalSummary: "PROFESSIONAL SUMMARY",
+    workExperience: "WORK EXPERIENCE",
+    education: "EDUCATION",
+    skills: "SKILLS",
+    certifications: "CERTIFICATIONS",
+    additionalInformation: "ADDITIONAL INFORMATION",
+    contact: "CONTACT",
+    expires: "Expires",
+  },
+  es: {
+    professionalSummary: "RESUMEN PROFESIONAL",
+    workExperience: "EXPERIENCIA LABORAL",
+    education: "EDUCACIÓN",
+    skills: "HABILIDADES",
+    certifications: "CERTIFICACIONES",
+    additionalInformation: "INFORMACIÓN ADICIONAL",
+    contact: "CONTACTO",
+    expires: "Expira en",
+  },
+  "pt-BR": {
+    professionalSummary: "RESUMO PROFISSIONAL",
+    workExperience: "EXPERIÊNCIA PROFISSIONAL",
+    education: "EDUCAÇÃO",
+    skills: "HABILIDADES",
+    certifications: "CERTIFICAÇÕES",
+    additionalInformation: "INFORMAÇÕES ADICIONAIS",
+    contact: "CONTATO",
+    expires: "Expira em",
+  },
+  zh: {
+    professionalSummary: "專業摘要",
+    workExperience: "工作經驗",
+    education: "教育",
+    skills: "技能",
+    certifications: "證書",
+    additionalInformation: "附加信息",
+    contact: "聯絡方式",
+    expires: "過期",
+  },
+};
+
 // Add optional resumeElement parameter
 export const generateResumePDF = async (
   resumeData: CVFormType,
   locale: string = "en"
 ) => {
   try {
+    // Retrieve the translations for the current locale; default to English if not available.
+    const translations = resumeTranslations[locale] || resumeTranslations.en;
+
     // Create a temporary div for rendering the resume content
     const tempElement = document.createElement("div");
     tempElement.id = "temp-resume-container";
@@ -21,9 +69,9 @@ export const generateResumePDF = async (
     tempElement.style.backgroundColor = "white";
     document.body.appendChild(tempElement);
 
-    // Create a more professional-looking preview optimized for ATS
+    // Generate a professional-looking ATS-optimized resume preview
     tempElement.innerHTML = `
-      <div id="temp-resume-preview" style="width: 100%; padding: 30px; font-family: 'Calibri', 'Arial', sans-serif; color: #333;">
+      <div id="temp-resume-preview" style="width: 100%; padding: 30px; font-family: 'Calibri', 'Arial', sans-serif; color: #333333;">
         <!-- Header with name and contact info -->
         <div style="border-bottom: 2px solid #2c5282; padding-bottom: 15px; margin-bottom: 20px;">
           <h1 style="font-size: 28px; margin: 0 0 10px 0; color: #2c5282;">${
@@ -53,32 +101,32 @@ export const generateResumePDF = async (
           </div>
         </div>
         
-        <!-- Professional Summary - ATS often looks for this section -->
+        <!-- ${translations.professionalSummary} -->
         ${
           resumeData.personalInfo?.summary
             ? `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">PROFESSIONAL SUMMARY</h2>
+          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${translations.professionalSummary}</h2>
           <p style="margin: 0; line-height: 1.5;">${resumeData.personalInfo.summary}</p>
         </div>
         `
             : ""
         }
         
-        <!-- Work Experience - Use standard section title for ATS -->
+        <!-- ${translations.workExperience} -->
         ${
           resumeData.experience && resumeData.experience.length > 0
             ? `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">WORK EXPERIENCE</h2>
+          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
+            translations.workExperience
+          }</h2>
           ${resumeData.experience
             .map(
               (exp) => `
             <div style="margin-bottom: 15px;">
               <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <div style="font-weight: bold;">${
-                  exp.position || ""
-                } @ <em>${
+                <div style="font-weight: bold;">${exp.position || ""} @ <em>${
                 exp.company || ""
               }</em></div>
                 <div>${
@@ -99,7 +147,6 @@ export const generateResumePDF = async (
                   : ""
               }</div>
               </div>
-              <div style="font-style: italic; margin-bottom: 5px;"></div>
               <p style="margin: 0; line-height: 1.4;">${
                 exp.description || ""
               }</p>
@@ -112,23 +159,23 @@ export const generateResumePDF = async (
             : ""
         }
         
-        <!-- Education - Standard section title for ATS -->
+        <!-- ${translations.education} -->
         ${
           resumeData.education && resumeData.education.length > 0
             ? `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">EDUCATION</h2>
+          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
+            translations.education
+          }</h2>
           ${resumeData.education
             .map(
               (edu) => `
             <div style="margin-bottom: 15px;">
               <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <div style="font-weight: bold;">${edu.degree || ""} in ${
+                <div style="font-weight: bold;">${edu.degree || ""} - ${
                 edu.fieldOfStudy
               }
-                <em> @ ${
-                  edu.institution || ""
-                } </em>
+                <em> @ ${edu.institution || ""} </em>
                 </div>
                 <div>${
                   formatDate(edu.startDate || "", "MMM/yyyy", locale) || ""
@@ -146,16 +193,21 @@ export const generateResumePDF = async (
             : ""
         }
         
-        <!-- Skills - ATS-friendly format with clear section header -->
+        <!-- ${translations.skills} -->
         ${
           resumeData.skills && resumeData.skills.skills
             ? `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">SKILLS</h2>
+          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
+            translations.skills
+          }</h2>
           <div style="column-width: 150px; column-gap: 20px;">
             ${resumeData.skills.skills
               .split(",")
-              .map((skill) => `<div style="margin-bottom: 8px; font-weight: medium; font-size: 16px;">${skill.trim()}</div>`)
+              .map(
+                (skill) =>
+                  `<div style="margin-bottom: 8px; font-weight: medium; font-size: 16px;">${skill.trim()}</div>`
+              )
               .join("")}
           </div>
         </div>
@@ -163,12 +215,14 @@ export const generateResumePDF = async (
             : ""
         }
 
-        <!-- Certifications - ATS-friendly format with clear section header -->
+        <!-- ${translations.certifications} -->
         ${
           resumeData.certifications && resumeData.certifications.length > 0
             ? `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">CERTIFICATIONS</h2>
+          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
+            translations.certifications
+          }</h2>
           <div>
             ${resumeData.certifications
               .map(
@@ -179,7 +233,11 @@ export const generateResumePDF = async (
                   <div>${cert.date || ""}</div>
                 </div>
                 <div style="margin-bottom: 5px;">${cert.issuer || ""}</div>
-                ${cert.expires ? `<div style="font-style: italic; font-size: 14px;">Expires: ${cert.expires}</div>` : ""}
+                ${
+                  cert.expires
+                    ? `<div style="font-style: italic; font-size: 14px;">${translations.expires}: ${cert.expires}</div>`
+                    : ""
+                }
               </div>
             `
               )
@@ -190,12 +248,12 @@ export const generateResumePDF = async (
             : ""
         }
 
-        <!-- Additional Information - Optional section -->
+        <!-- ${translations.additionalInformation} -->
         ${
           resumeData.additionalInfo
             ? `
         <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">ADDITIONAL INFORMATION</h2>
+          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${translations.additionalInformation}</h2>
           <p style="margin: 0; line-height: 1.5;">${resumeData.additionalInfo}</p>
         </div>
         `
@@ -227,9 +285,7 @@ export const generateResumePDF = async (
           }
           ${
             resumeData.certifications
-              ?.map(
-                (cert) => `${cert.name} ${cert.issuer}`
-              )
+              ?.map((cert) => `${cert.name} ${cert.issuer}`)
               .join(" ") || ""
           }
           ${resumeData.additionalInfo || ""}
@@ -237,55 +293,39 @@ export const generateResumePDF = async (
       </div>
     `;
 
-    // Give the browser a moment to render the content
+    // Allow a moment for the content to render
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     const elementToCapture = document.getElementById("temp-resume-preview");
+    if (!elementToCapture) throw new Error("Resume preview element not found");
 
-    if (!elementToCapture) {
-      throw new Error("Resume preview element not found");
-    }
-
-    // Create the canvas from the element with lower scale
+    // Generate a canvas of the temporary element
     const canvas = await html2canvas(elementToCapture, {
-      scale: 1.5, // Reduced from 2 to 1.5 for smaller file size
+      scale: 1.5,
       useCORS: true,
       logging: false,
-      backgroundColor: '#ffffff',
-      imageTimeout: 0,
-      removeContainer: true, // Clean up after rendering
+      backgroundColor: "#ffffff",
     });
 
-    // Get canvas dimensions
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
-
-    // Check if dimensions are valid
-    if (imgWidth <= 0 || imgHeight <= 0) {
+    if (imgWidth <= 0 || imgHeight <= 0)
       throw new Error("Invalid canvas dimensions");
-    }
 
-    // Reduce image quality when converting to data URL
-    const imgData = canvas.toDataURL('image/jpeg', 0.8); // Use JPEG instead of PNG with 80% quality
+    const imgData = canvas.toDataURL("image/jpeg", 0.8);
 
-    // Create PDF with proper dimensions
     const pdf = new jsPDF({
-      orientation: "portrait", // Resumes are usually portrait
+      orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
 
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    // Calculate scaling ratio to fit the content on the page with margins
     const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95;
-
-    // Calculate position to center the content
     const imgX = (pdfWidth - imgWidth * ratio) / 2;
-    const imgY = 5; // Small margin at top
+    const imgY = 5; // top margin
 
-    // Make sure none of the coordinates are NaN, infinity, or negative
     if (
       isNaN(imgX) ||
       isNaN(imgY) ||
@@ -303,24 +343,22 @@ export const generateResumePDF = async (
       throw new Error("Invalid PDF coordinates calculated");
     }
 
-    // Add the image to the PDF with compression
     pdf.addImage(
       imgData,
-      'JPEG', // Use JPEG format instead of PNG
+      "JPEG",
       imgX,
       imgY,
       imgWidth * ratio,
       imgHeight * ratio,
       undefined,
-      'FAST' // Use compression
+      "FAST"
     );
 
-    // Add optimized hidden text for ATS parsing
-    addOptimizedATSText(pdf, resumeData);
+    // Add optimized hidden text for ATS parsing using locale-specific text
+    addOptimizedATSText(pdf, resumeData, translations);
 
     // Clean up temporary element
     document.body.removeChild(tempElement);
-
     return pdf;
   } catch (error) {
     console.error("Error generating PDF:", error);
@@ -329,51 +367,51 @@ export const generateResumePDF = async (
   }
 };
 
-// Update function to get pdfHeight from pdf object
-function addOptimizedATSText(pdf: jsPDF, data: CVFormType) {
-  // Add text to the same page but with white color
+// Early return is used in the loop below to skip empty sections.
+function addOptimizedATSText(
+  pdf: jsPDF,
+  data: CVFormType,
+  translations: Record<string, string>
+) {
   pdf.setFontSize(1); // Extremely small font
   pdf.setTextColor(255, 255, 255); // White color (invisible)
-  
+
   const pdfHeight = pdf.internal.pageSize.getHeight();
   let y = pdfHeight - 10; // Position at bottom of page
   const lineHeight = 1;
-  
-  // Add only the most important sections that ATS systems look for
-  // Use smaller strings and avoid repetition to reduce file size
-  
-  // ATS-friendly headers and content with essential keywords
+
   const sections = [
-    'CONTACT',
-    `${data.personalInfo?.fullName || ''} | ${data.personalInfo?.email || ''} | ${data.personalInfo?.phone || ''} | ${data.personalInfo?.linkedIn || ''}`,
-    
-    'EXPERIENCE',
-    data.experience?.map(exp => 
-      `${exp.position} at ${exp.company} (${exp.startDate}-${exp.endDate})`
-    ).join(' | ') || '',
-    
-    'EDUCATION',
-    data.education?.map(edu => 
-      `${edu.degree} in ${edu.fieldOfStudy} at ${edu.institution}`
-    ).join(' | ') || '',
-    
-    'SKILLS',
-    data.skills?.skills || '',
-    
-    'CERTIFICATIONS',
-    data.certifications?.map(cert => 
-      `${cert.name} from ${cert.issuer} (${cert.date})`
-    ).join(' | ') || '',
-    
-    'ADDITIONAL INFO',
-    data.additionalInfo || ''
+    translations.contact,
+    `${data.personalInfo?.fullName || ""} | ${
+      data.personalInfo?.email || ""
+    } | ${data.personalInfo?.phone || ""} | ${
+      data.personalInfo?.linkedIn || ""
+    }`,
+    translations.workExperience,
+    data.experience
+      ?.map(
+        (exp) =>
+          `${exp.position} at ${exp.company} (${exp.startDate}-${exp.endDate})`
+      )
+      .join(" | ") || "",
+    translations.education,
+    data.education
+      ?.map(
+        (edu) => `${edu.degree} in ${edu.fieldOfStudy} at ${edu.institution}`
+      )
+      .join(" | ") || "",
+    translations.skills,
+    data.skills?.skills || "",
+    translations.certifications,
+    data.certifications
+      ?.map((cert) => `${cert.name} from ${cert.issuer} (${cert.date})`)
+      .join(" | ") || "",
+    translations.additionalInformation,
+    data.additionalInfo || "",
   ];
-  
-  // Add each section to the PDF
+
   for (const section of sections) {
-    // Skip empty sections
     if (!section) continue;
-    
     pdf.text(section, 10, y);
     y += lineHeight;
   }

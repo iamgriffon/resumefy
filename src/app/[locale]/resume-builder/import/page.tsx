@@ -1,9 +1,8 @@
 import CSVImport from "@/components/resume/CSVImport";
 
-export default function ImportPage() {
+export default async function ImportPage() {
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Import Your CV</h1>
+    <div className="w-full max-w-3xl mx-auto py-8">
       <CSVImport />
     </div>
   );

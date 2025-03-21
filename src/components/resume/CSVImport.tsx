@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { CVFormType } from "./schemas";
 import { parseCSV } from "@/lib/parser/parseCSV";
-import { useTranslations } from "use-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 export default function CSVImport() {
   const router = useRouter();
@@ -21,6 +21,7 @@ export default function CSVImport() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const t = useTranslations('CSVImport');
+  const locale = useLocale();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null);
@@ -52,7 +53,7 @@ export default function CSVImport() {
     try {
       const parsedData = await parseCSV<CVFormType>(file);
       localStorage.setItem("importedCVData", JSON.stringify(parsedData));
-      router.push("/en/resume-builder/preview");
+      router.push(`/${locale}/resume-builder/preview`);
     } catch (err) {
       setError(typeof err === "string" ? err : "Failed to import CSV");
     } finally {
@@ -61,11 +62,15 @@ export default function CSVImport() {
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
-        <CardTitle>Import Resume from CSV</CardTitle>
+    <React.Fragment>
+      <h1 className="text-3xl w-full mx-auto max-w-3xl font-bold mb-8">
+        {t("title")}
+      </h1>
+      <Card className="w-full max-w-3xl mx-auto">
+        <CardHeader>
+          <CardTitle>{t("subtitle")}</CardTitle>
         <CardDescription>
-          Upload a CSV file to import your resume data
+          {t("description")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -83,42 +88,40 @@ export default function CSVImport() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button onClick={handleImport} disabled={!file || isUploading} data-testid="import-button">
-              {isUploading ? "Importing..." : "Import"}
+            <Button onClick={handleImport} variant={!file || isUploading ? "link" : "outline"} disabled={!file || isUploading} data-testid="import-button">
+              {isUploading ? t("importing") : t("import")}
             </Button>
 
             <Button
               variant="outline"
-              onClick={() => router.push("/en/resume-builder")}
+              onClick={() => router.push(`/${locale}/resume-builder`)}
               disabled={isUploading}
               data-testid="cancel-import-button"
             >
-              Cancel
+              {t("cancel")}
             </Button>
           </div>
 
           <div className="mt-4">
             <h3 className="text-sm font-medium mb-1">
-              CSV Format Requirements:
+              {t("fileRequirements")}
             </h3>
-            <p className="text-sm text-gray-600">
-              Your CSV file should include columns for personal information
-              (name, email, phone, location, summary), education (institution,
-              degree, field, dates, description), work experience (company,
-              position, dates, description), and skills.
-            </p>
+            <CardDescription>
+              {t("fileRequirementsDesc")}
+            </CardDescription>
             <div className="mt-2">
               <a
                 href="/sample-resume.csv"
                 download
                 className="text-sm text-blue-600 hover:underline"
               >
-                Download Sample CSV Template
+                {t("downloadTemplate")}
               </a>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </CardContent>
+      </Card>
+    </React.Fragment>
   );
 }

@@ -1,16 +1,10 @@
 import { CVForm } from "@/components/resume/CVForm";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ResumeBuilderClient } from "./client";
 
-export default function ResumeBuilderPage() {
+export default async function ResumeBuilderPage() {
   return (
-    <div className="container mx-auto py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Create Your CV</h1>
-        <Link href="/en/resume-builder/import">
-          <Button variant="outline">Import from CSV</Button>
-        </Link>
-      </div>
+    <div className="w-full max-w-3xl mx-auto py-8">
+      <ResumeBuilderClient />
       <CVForm />
     </div>
   );

@@ -38,11 +38,13 @@ export function ResumePreviewer({ data }: ResumePreviewerProps) {
               <div>{exp.startDate} – {exp.endDate}</div>
             </div>
             <p className="my-1">{exp.description}</p>
-            <ul className="list-disc pl-5">
-              {exp.highlights.map((highlight, hIndex) => (
-                <li key={hIndex}>{highlight}</li>
-              ))}
-            </ul>
+            {exp.highlights && (
+              <ul className="list-disc pl-5">
+                {exp.highlights.map((highlight, hIndex) => (
+                  <li key={hIndex}>{highlight}</li>
+                ))}
+              </ul>
+            )}
           </div>
         ))}
       </div>
@@ -68,7 +70,7 @@ export function ResumePreviewer({ data }: ResumePreviewerProps) {
         ) : data.skills && typeof data.skills === 'object' && 'skills' in data.skills ? (
           <div>{data.skills.skills}</div>
         ) : Array.isArray(data.skills) ? (
-          data.skills.map((skillGroup, index) => (
+          (data.skills as Array<{ category: string; items: string[] | string }>).map((skillGroup, index) => (
             <div key={index} className="mb-2">
               <span className="font-semibold">{skillGroup.category}:</span>{' '}
               <span>{Array.isArray(skillGroup.items) ? skillGroup.items.join(', ') : skillGroup.items}</span>

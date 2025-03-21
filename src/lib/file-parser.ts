@@ -45,6 +45,15 @@ export interface ResumeData {
   additionalInfo?: string;
 }
 
+type ExperienceItem = {
+  company?: string;
+  position?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  highlights?: string[] | string;
+};
+
 export async function parseResumeFile(file: File): Promise<ResumeData> {
   if (!file) {
     throw new Error('No file provided');
@@ -63,7 +72,8 @@ export async function parseResumeFile(file: File): Promise<ResumeData> {
   const workbook = XLSX.read(buffer, { type: 'array' });
 
   // Process sheets
-  const personal = processSheet(workbook, 'Personal') || [];
+  const personal = processSheet(workbook, 'Personal');
+  const personalData = Array.isArray(personal) && personal.length > 0 ? personal[0] : {};
   const experience = processSheet(workbook, 'Experience') || [];
   const education = processSheet(workbook, 'Education') || [];
   const skills = processSheet(workbook, 'Skills') || [];
@@ -71,29 +81,27 @@ export async function parseResumeFile(file: File): Promise<ResumeData> {
   const certifications = processSheet(workbook, 'Certifications') || [];
   const additionalInfo = processSheet(workbook, 'AdditionalInfo') || [];
 
-  // Process skills into a string format if needed
-  const processedSkills = { skills: Array.isArray(skills) ? skills.join(', ') : '' };
+  // Process skills into a proper format
+  const processedSkills = processSkills(skills);
 
   return {
     personal: {
-      name: personal?.fullName || personal?.name || '',
-      email: personal?.email || '',
-      phone: personal?.phone || '',
-      location: personal?.location || '',
-      linkedIn: personal?.linkedIn || '',
-      website: personal?.website || '',
-      summary: personal?.summary || '',
+      name: (personalData as Partial<ResumeData>['personal'])?.name || '',
+      email: (personalData as Partial<ResumeData>['personal'])?.email || '',
+      phone: (personalData as Partial<ResumeData>['personal'])?.phone || '',
+      location: (personalData as Partial<ResumeData>['personal'])?.location || '',
+      linkedIn: (personalData as Partial<ResumeData>['personal'])?.linkedIn || '',
+      website: (personalData as Partial<ResumeData>['personal'])?.website || '',
+      summary: (personalData as Partial<ResumeData>['personal'])?.summary || '',
     },
-    summary: personal?.summary || '',
-    experience: experience.map((exp: any) => ({
+    summary: (personalData as Partial<ResumeData>['personal'])?.summary || '',
+    experience: (experience as ExperienceItem[]).map((exp) => ({
       company: exp.company || '',
       position: exp.position || '',
       startDate: exp.startDate || '',
       endDate: exp.endDate || '',
       description: exp.description || '',
-      highlights: exp.highlights ? 
-        (typeof exp.highlights === 'string' ? exp.highlights.split('\n') : exp.highlights) : 
-        [],
+      highlights: processHighlights(exp.highlights),
     })),
     education: education.map((edu: any) => ({
       institution: edu.institution || '',
@@ -103,17 +111,11 @@ export async function parseResumeFile(file: File): Promise<ResumeData> {
       endDate: edu.endDate || '',
       gpa: edu.gpa || '',
     })),
-    skills: typeof skills === 'object' && !Array.isArray(skills) && 'skills' in skills ? 
-      skills : 
-      { skills: Array.isArray(skills) ? skills.join(', ') : (typeof skills === 'string' ? skills : '') },
+    skills: processedSkills,
     projects: projects?.map((proj: any) => ({
       name: proj?.name || '',
       description: proj?.description || '',
-      technologies: Array.isArray(proj?.technologies) 
-        ? proj?.technologies 
-        : (typeof proj?.technologies === 'string' 
-            ? (proj?.technologies as string).split(',').map((t: string) => t.trim())
-            : []),
+      technologies: processTechnologies(proj?.technologies),
       link: proj?.link || '',
     })),
     certifications: certifications?.map((cert: any) => ({
@@ -122,7 +124,8 @@ export async function parseResumeFile(file: File): Promise<ResumeData> {
       date: cert?.date || '',
       expires: cert?.expires || '',
     })),
-    additionalInfo: personal?.additionalInfo || additionalInfo?.[0]?.content || '',
+    additionalInfo: (personalData as any)?.additionalInfo || 
+      (Array.isArray(additionalInfo) && additionalInfo.length > 0 ? (additionalInfo[0] as any)?.content : ''),
   };
 }
 
@@ -134,4 +137,48 @@ function processSheet(workbook: XLSX.WorkBook, sheetName: string) {
   }
   
   return XLSX.utils.sheet_to_json(sheet);
+}
+
+function processHighlights(highlights: string[] | string | undefined): string[] {
+  if (!highlights) {
+    return [];
+  }
+  
+  if (typeof highlights === 'string') {
+    return highlights.split('\n');
+  }
+  
+  return highlights;
+}
+
+function processTechnologies(technologies: string[] | string | undefined): string[] {
+  if (!technologies) {
+    return [];
+  }
+  
+  if (typeof technologies === 'string') {
+    return technologies.split(',').map(t => t.trim());
+  }
+  
+  if (Array.isArray(technologies)) {
+    return technologies;
+  }
+  
+  return [];
+}
+
+function processSkills(skills: any): { skills: string } {
+  if (typeof skills === 'object' && !Array.isArray(skills) && 'skills' in skills) {
+    return skills;
+  }
+  
+  if (Array.isArray(skills)) {
+    return { skills: skills.join(', ') };
+  }
+  
+  if (typeof skills === 'string') {
+    return { skills: skills };
+  }
+  
+  return { skills: '' };
 } 

@@ -1,10 +1,9 @@
 import { CSVPreview } from "@/components/resume/CSVPreview";
 
-export default function PreviewPage() {
+export default async function PreviewPage() {
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Preview Your CV</h1>
+    <div className="container max-w-3xl mx-auto py-8">
       <CSVPreview />
     </div>
   );
-} 
+}

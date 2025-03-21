@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { format } from "date-fns";
-import { enUS, es } from "date-fns/locale";
+import { enUS, es, ptBR, zhCN } from "date-fns/locale";
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -14,6 +14,8 @@ export function formatDate(
   const localeMap = {
     en: enUS,
     es: es,
+    'pt-BR': ptBR,
+    zh: zhCN,
   };
   
   // Handle special cases like "PRESENT"
