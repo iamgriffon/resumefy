@@ -1,0 +1,61 @@
+{
+  "current": "en",
+  "project": {
+    "title": "Resumefy",
+    "description": "Build an ATS-friendly CV from your data"
+  },
+  "home": {
+    "title": "CV Builder",
+    "description": "Build an ATS-friendly CV from your data",
+    "upload": "Upload XLSX/CSV",
+    "build": "Build CV"
+  },
+  "resume": {
+    "personal": "Personal Information",
+    "experience": "Work Experience",
+    "education": "Education",
+    "skills": "Skills",
+    "projects": "Projects",
+    "certifications": "Certifications"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "download": "Download PDF"
+  },
+  "ResumeBuilder": {
+    "editResume": "Edit Resume",
+    "saveChanges": "Save Changes",
+    "noResumeData": "No Resume Data Found",
+    "startFresh": "Would you like to start with a new resume?",
+    "createNew": "Create New Resume",
+    "edit": "Edit",
+    "import": "Import",
+    "importing": "Importing...",
+    "invalidFileType": "Please upload a valid CSV file",
+    "noFileSelected": "Please select a file to import",
+    "confirmAndSave": "Confirm & Save"
+  },
+  "CSVImport": {
+    "title": "Import Resume from CSV",
+    "description": "Upload a CSV file to import your resume data",
+    "fileRequirements": "CSV Format Requirements:",
+    "fileRequirementsDesc": "Your CSV file should include columns for personal information (name, email, phone, location, summary), education (institution, degree, field, dates, description), work experience (company, position, dates, description), and skills.",
+    "downloadTemplate": "Download Sample CSV Template",
+    "invalidFileType": "Please upload a valid CSV file",
+    "noFileSelected": "Please select a file to import"
+  },
+  "CSVPreview": {
+    "title": "Resume Preview",
+    "edit": "Edit",
+    "confirmAndSave": "Confirm & Save",
+    "errorLoading": "Error loading the imported data",
+    "noImportedData": "No imported data found",
+    "unableToLoad": "Unable to load preview",
+    "backToImport": "Back to Import",
+    "missingFields": "Missing fields in CSV file",
+    "confirm": "Confirm & Save"
+  }
+} 
