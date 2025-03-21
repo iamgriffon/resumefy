@@ -1,0 +1,17 @@
+section,fullName,email,phone,location,linkedIn,summary,additionalInfo
+personal,John Doe,john.doe@example.com,123-456-7890,"New York, NY",https://linkedin.com/in/johndoe,"Experienced software engineer with a passion for creating user-friendly applications.","Fluent in English and Spanish. Available for remote work and willing to relocate."
+
+section,institution,degree,fieldOfStudy,startDate,endDate,description
+education,University of Technology,Bachelor of Science,Computer Science,2015-09,2019-05,"Dean's List, participated in coding competitions."
+education,College of Design,Associate Degree,Web Development,2013-09,2015-05,"Graduated with honors."
+
+section,company,position,startDate,endDate,description
+experience,Tech Solutions Inc.,Senior Developer,2019-06,2023-03,"Developed and maintained enterprise web applications. Led a team of 5 junior developers."
+experience,Web Innovators,Web Developer,2015-07,2019-05,"Created responsive websites for various clients. Implemented SEO best practices."
+
+section,skills
+"JavaScript, TypeScript, React, Node.js, HTML, CSS, SQL, Git, Agile Development, UI/UX Design"
+
+section,name,issuer,date,expires
+certifications,AWS Certified Solutions Architect,Amazon Web Services,2021-05,2024-05
+certifications,Certified Scrum Master,Scrum Alliance,2020-02,2022-02 

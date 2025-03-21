@@ -1,0 +1,17 @@
+section,fullName,email,phone,location,linkedIn,summary,additionalInfo
+personal,John Doe,john@example.com,+1234567890,"New York, NY",https://linkedin.com/in/johndoe,"Experienced software engineer with 5+ years in web development.","Available for remote work and willing to relocate."
+
+section,institution,degree,fieldOfStudy,startDate,endDate,description
+education,MIT,B.S.,Computer Science,2015-09,2019-05,"Dean's List, Senior Thesis on AI"
+education,Stanford University,M.S.,Artificial Intelligence,2019-09,2021-05,"Research in Deep Learning applications"
+
+section,company,position,startDate,endDate,description
+experience,Google,Software Engineer,2021-06,2023-05,"Developed scalable APIs and services for Google Cloud Platform"
+experience,Meta,Senior Engineer,2023-06,PRESENT,"Leading frontend architecture for internal tools"
+
+section,skills
+"JavaScript, TypeScript, React, Node.js, Python, TensorFlow, AWS, Docker, Kubernetes"
+
+section,name,issuer,date,expires
+certifications,AWS Certified Solutions Architect,Amazon Web Services,2021-05,2024-05
+certifications,Certified Scrum Master,Scrum Alliance,2020-02,2022-02 
