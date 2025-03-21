@@ -111,7 +111,7 @@ export function CSVPreview() {
                 </div>
                 <div>
                   <p data-testid="summary" className="italic">
-                    "{data.personalInfo.summary}"
+                    {`"${data.personalInfo.summary}"`}
                   </p>
                 </div>
               </div>
