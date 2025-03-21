@@ -15,6 +15,8 @@ const resumeTranslations: Record<string, Record<string, string>> = {
     additionalInformation: "ADDITIONAL INFORMATION",
     contact: "CONTACT",
     expires: "Expires",
+    phone: "Phone",
+    location: "Location",
   },
   es: {
     professionalSummary: "RESUMEN PROFESIONAL",
@@ -25,6 +27,8 @@ const resumeTranslations: Record<string, Record<string, string>> = {
     additionalInformation: "INFORMACIÓN ADICIONAL",
     contact: "CONTACTO",
     expires: "Expira en",
+    phone: "Teléfono",
+    location: "Ubicación",
   },
   "pt-BR": {
     professionalSummary: "RESUMO PROFISSIONAL",
@@ -35,6 +39,8 @@ const resumeTranslations: Record<string, Record<string, string>> = {
     additionalInformation: "INFORMAÇÕES ADICIONAIS",
     contact: "CONTATO",
     expires: "Expira em",
+    phone: "Telefone",
+    location: "Localização",
   },
   zh: {
     professionalSummary: "專業摘要",
@@ -45,6 +51,8 @@ const resumeTranslations: Record<string, Record<string, string>> = {
     additionalInformation: "附加信息",
     contact: "聯絡方式",
     expires: "過期",
+    location: "位置",
+    phone: "電話",  
   },
 };
 
@@ -85,12 +93,12 @@ export const generateResumePDF = async (
             }
             ${
               resumeData.personalInfo?.phone
-                ? `<div style="margin-right: 15px;"><strong>Phone:</strong> ${resumeData.personalInfo.phone}</div>`
+                ? `<div style="margin-right: 15px;"><strong>${translations.phone}:</strong> ${resumeData.personalInfo.phone}</div>`
                 : ""
             }
             ${
               resumeData.personalInfo?.location
-                ? `<div><strong>Location:</strong> ${resumeData.personalInfo.location}</div>`
+                ? `<div><strong>${translations.location}:</strong> ${resumeData.personalInfo.location}</div>`
                 : ""
             }
             ${
