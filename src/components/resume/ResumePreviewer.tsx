@@ -58,7 +58,6 @@ export function ResumePreviewer({ data }: ResumePreviewerProps) {
               <div>{edu.startDate} – {edu.endDate}</div>
             </div>
             <div>{edu.degree}, {edu.field}</div>
-            {edu.gpa && <div>GPA: {edu.gpa}</div>}
           </div>
         ))}
       </div>

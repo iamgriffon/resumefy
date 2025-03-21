@@ -15,6 +15,7 @@ import { useTranslations } from "use-intl";
 import { generateResumePDF } from "@/lib/pdf-generator";
 import { formatDate } from "@/lib/utils";
 import { useLocale } from "next-intl";
+import { toast } from "@/hooks/use-toast";
 
 export function CSVPreview() {
   const router = useRouter();
@@ -45,16 +46,20 @@ export function CSVPreview() {
       try {
         const pdf = await generateResumePDF(data as CVFormType, locale);
         pdf.save(`${data?.personalInfo?.fullName || "resume"}.pdf`);
-        alert("Resume data saved and PDF generated successfully!");
+        toast({
+          title: "Resume data saved and PDF generated successfully!",
+        });
       } catch (pdfError) {
         console.error("PDF generation failed:", pdfError);
-        alert(
-          "Resume data saved but PDF generation failed. You can try again later."
-        );
+        toast({
+          title: "Resume data saved but PDF generation failed. You can try again later.",
+        });
       }
     } catch (err) {
       console.error("Error in saving resume:", err);
-      alert("Failed to save resume data.");
+      toast({
+        title: "Failed to save resume data.",
+      });
     }
   };
 
@@ -106,7 +111,7 @@ export function CSVPreview() {
                 </div>
                 <div>
                   <p data-testid="summary" className="italic">
-                    {data.personalInfo.summary}
+                    "{data.personalInfo.summary}"
                   </p>
                 </div>
               </div>
