@@ -3,7 +3,7 @@
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -13,8 +13,6 @@ import { generateResumePDF } from "@/lib/pdf-generator";
 import { MonthYearPicker } from "@/components/ui/date-picker";
 import {
   SaveIcon,
-  ChevronDown,
-  ChevronUp,
   MinimizeIcon,
   MaximizeIcon,
 } from "lucide-react";
@@ -124,7 +122,7 @@ export function CVForm({
         certifications: collapse,
       });
     },
-    [collapsedSections]
+    [setCollapsedSections]
   );
 
   const isAllSectionsCollapsed = useMemo(() => {
