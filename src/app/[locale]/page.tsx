@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 
-export default async function HomePage({
-  params,
-}: {
-  params: { locale: string };
-}) {
+type PageProps = {
+  params: Promise<{ locale: string }>
+}
+
+export default async function Page({ params }: PageProps) {
   const { locale } = await params;
   redirect(`/${locale}/home`);
 }
