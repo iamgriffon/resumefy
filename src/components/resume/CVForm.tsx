@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cvFormSchema, CVFormType } from "./schemas";
-import { useLocale, useTranslations } from "use-intl";
+import { useTranslations } from "use-intl";
 import { generateResumePDF } from "@/lib/pdf-generator";
 import { MonthYearPicker } from "@/components/ui/date-picker";
 import { SaveIcon, MinimizeIcon, MaximizeIcon } from "lucide-react";
@@ -127,7 +127,6 @@ export function CVForm({
   }, [collapsedSections]);
 
   const router = useRouter();
-  const locale = useLocale();
 
   const submit = (data: CVFormType) => {
     if (onSubmit) {
