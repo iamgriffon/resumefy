@@ -11,11 +11,7 @@ import { cvFormSchema, CVFormType } from "./schemas";
 import { useTranslations } from "use-intl";
 import { generateResumePDF } from "@/lib/pdf-generator";
 import { MonthYearPicker } from "@/components/ui/date-picker";
-import {
-  SaveIcon,
-  MinimizeIcon,
-  MaximizeIcon,
-} from "lucide-react";
+import { SaveIcon, MinimizeIcon, MaximizeIcon } from "lucide-react";
 import { Checkbox } from "../ui/checkbox";
 import React, { useState, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
@@ -509,6 +505,17 @@ export function CVForm({
                 />
                 <p className="text-sm">{t("currentlyStudying")}</p>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4"
+                size="sm"
+                onClick={() => removeEducation(index)}
+                disabled={educationFields.length === 1}
+                aria-label="Remove education entry"
+              >
+                {t("remove")}
+              </Button>
             </div>
           ))}
           <Button
