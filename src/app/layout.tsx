@@ -42,7 +42,7 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
-          "bg-gradient-to-br from-white to-neutral-400 dark:from-neutral-900 dark:to-black",
+          "bg-gradient-to-br from-white to-neutral-300 dark:from-neutral-900 dark:to-black",
           inter.className,
           geistSans.variable,
           geistMono.variable

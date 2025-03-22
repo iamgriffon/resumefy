@@ -16,7 +16,8 @@ import { Checkbox } from "../ui/checkbox";
 import React, { useState, useMemo, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FormCard } from "./cv-form/form-card";
-import { isBefore } from "date-fns";
+import { isBefore, isAfter } from "date-fns";
+
 export function CVForm({
   initialData,
   onSubmit,
@@ -31,6 +32,7 @@ export function CVForm({
     handleSubmit,
     control,
     formState: { errors },
+    setValue,
   } = useForm<CVFormType>({
     resolver: zodResolver(cvFormSchema),
     defaultValues: {
@@ -128,6 +130,29 @@ export function CVForm({
 
   const router = useRouter();
 
+  const validateDateOrder = useCallback(
+    (startDate: Date | undefined, endDate: Date | undefined): {startDate: Date, endDate: Date} => {
+      // Create default dates if any are undefined
+      const defaultDate = new Date();
+      const validStartDate = startDate || defaultDate;
+      const validEndDate = endDate || defaultDate;
+      
+      // If start date is after end date, set both to the start date
+      if (isAfter(validStartDate, validEndDate)) {
+        return {startDate: validStartDate, endDate: validStartDate};
+      }
+      
+      // If end date is before start date, set both to the end date
+      if (isBefore(validEndDate, validStartDate)) {
+        return {startDate: validEndDate, endDate: validEndDate};
+      }
+      
+      // Dates are already in valid order
+      return {startDate: validStartDate, endDate: validEndDate};
+    },
+    []
+  );
+
   const submit = (data: CVFormType) => {
     if (onSubmit) {
       try {
@@ -142,7 +167,7 @@ export function CVForm({
               onSubmit(data);
             });
         } else {
-          console.log("edit")
+          console.log("edit");
           onSubmit(data);
         }
       } catch (error) {
@@ -408,9 +433,27 @@ export function CVForm({
                           parseDate(new Date().toISOString().split("T")[0])
                         }
                         onChange={(date) => {
-                          field.onChange(
-                            date ? date.toISOString().split("T")[0] : ""
-                          );
+                          if (!date) {
+                            field.onChange("");
+                            return;
+                          }
+                          
+                          const endDateField = control._formValues.education[index].endDate;
+                          // Skip validation if end date is "present"
+                          if (endDateField === "present") {
+                            field.onChange(date.toISOString().split("T")[0]);
+                            return;
+                          }
+                          
+                          const endDate = parseDate(endDateField);
+                          const { startDate: newStartDate, endDate: newEndDate } = validateDateOrder(date, endDate);
+                          
+                          // Update the end date if it changed during validation
+                          if (endDate && endDate.getTime() !== newEndDate.getTime()) {
+                            setValue(`education.${index}.endDate`, newEndDate.toISOString().split("T")[0]);
+                          }
+                          
+                          field.onChange(newStartDate.toISOString().split("T")[0]);
                         }}
                         placeholder={t("selectStartDate")}
                         data-testid={`education-${index}-startDate-input`}
@@ -445,20 +488,25 @@ export function CVForm({
                           parseDate(field.value) ||
                           parseDate(new Date().toISOString().split("T")[0])
                         }
-                          onChange={(date) => {
-                            if (!date) {
-                              field.onChange("");
-                              return;
-                            }
-                            
-                            const startDate = parseDate(control._formValues.education[index].startDate);
-                            if (startDate && isBefore(date, startDate)) {
-                              field.onChange(control._formValues.education[index].startDate);
-                              return;
-                            }
-                            
-                            field.onChange(date.toISOString().split("T")[0]);
-                          }}
+                        onChange={(date) => {
+                          if (!date) {
+                            field.onChange("");
+                            return;
+                          }
+                          
+                          const startDateField = control._formValues.education[index].startDate;
+                          const startDate = parseDate(startDateField);
+                          
+                          const { startDate: newStartDate, endDate: newEndDate } = validateDateOrder(startDate, date);
+                          
+                          // Update both dates if needed
+                          if (startDate && startDate.getTime() !== newStartDate.getTime()) {
+                            // Start date needed to be updated
+                            setValue(`education.${index}.startDate`, newStartDate.toISOString().split("T")[0]);
+                          }
+                          
+                          field.onChange(newEndDate.toISOString().split("T")[0]);
+                        }}
                         placeholder={t("selectEndDate")}
                         data-testid={`education-${index}-endDate-input`}
                       />
@@ -509,8 +557,16 @@ export function CVForm({
                       onCheckedChange={(checked) => {
                         if (checked) {
                           endDateField.onChange("present");
+                          return;
+                        }
+                        
+                        // When unchecking, set end date to current start date
+                        const startDateValue = control._formValues.education[index].startDate;
+                        const startDate = parseDate(startDateValue);
+                        if (startDate) {
+                          endDateField.onChange(startDate.toISOString().split("T")[0]);
                         } else {
-                          endDateField.onChange(parseDate(field.startDate));
+                          endDateField.onChange(getCurrentDate());
                         }
                       }}
                     />
@@ -620,11 +676,29 @@ export function CVForm({
                           parseDate(field.value) ||
                           parseDate(new Date().toISOString().split("T")[0])
                         }
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? date.toISOString().split("T")[0] : ""
-                          )
-                        }
+                        onChange={(date) => {
+                          if (!date) {
+                            field.onChange("");
+                            return;
+                          }
+                          
+                          const endDateField = control._formValues.experience[index].endDate;
+                          // Skip validation if end date is "present"
+                          if (endDateField === "present") {
+                            field.onChange(date.toISOString().split("T")[0]);
+                            return;
+                          }
+                          
+                          const endDate = parseDate(endDateField);
+                          const { startDate: newStartDate, endDate: newEndDate } = validateDateOrder(date, endDate);
+                          
+                          // Update the end date if it changed during validation
+                          if (endDate && endDate.getTime() !== newEndDate.getTime()) {
+                            setValue(`experience.${index}.endDate`, newEndDate.toISOString().split("T")[0]);
+                          }
+                          
+                          field.onChange(newStartDate.toISOString().split("T")[0]);
+                        }}
                         placeholder={t("selectStartDate")}
                         data-testid={`experience-${index}-startDate-input`}
                       />
@@ -658,11 +732,25 @@ export function CVForm({
                           parseDate(field.value) ||
                           parseDate(new Date().toISOString().split("T")[0])
                         }
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? date.toISOString().split("T")[0] : ""
-                          )
-                        }
+                        onChange={(date) => {
+                          if (!date) {
+                            field.onChange("");
+                            return;
+                          }
+                          
+                          const startDateField = control._formValues.experience[index].startDate;
+                          const startDate = parseDate(startDateField);
+                          
+                          const { startDate: newStartDate, endDate: newEndDate } = validateDateOrder(startDate, date);
+                          
+                          // Update both dates if needed
+                          if (startDate && startDate.getTime() !== newStartDate.getTime()) {
+                            // Start date needed to be updated
+                            setValue(`experience.${index}.startDate`, newStartDate.toISOString().split("T")[0]);
+                          }
+                          
+                          field.onChange(newEndDate.toISOString().split("T")[0]);
+                        }}
                         placeholder={t("selectEndDate")}
                         data-testid={`experience-${index}-endDate-input`}
                       />
@@ -711,8 +799,16 @@ export function CVForm({
                       onCheckedChange={(checked) => {
                         if (checked) {
                           endDateField.onChange("present");
+                          return;
+                        }
+                        
+                        // When unchecking, set end date to current start date
+                        const startDateValue = control._formValues.experience[index].startDate;
+                        const startDate = parseDate(startDateValue);
+                        if (startDate) {
+                          endDateField.onChange(startDate.toISOString().split("T")[0]);
                         } else {
-                          endDateField.onChange(field.startDate);
+                          endDateField.onChange(getCurrentDate());
                         }
                       }}
                     />
@@ -830,11 +926,27 @@ export function CVForm({
                     <MonthYearPicker
                       id={`certification-${index}-issueDate`}
                       value={parseDate(field.value as string)}
-                      onChange={(date) =>
-                        field.onChange(
-                          date ? date.toISOString().split("T")[0] : ""
-                        )
-                      }
+                      onChange={(date) => {
+                        if (!date) {
+                          field.onChange("");
+                          return;
+                        }
+                        
+                        // Get the expiration date for validation
+                        const expiresField = control._formValues.certifications[index].expires;
+                        const expiresDate = parseDate(expiresField);
+                        
+                        // Validate date order
+                        const { startDate: newIssueDate, endDate: newExpiresDate } = validateDateOrder(date, expiresDate);
+                        
+                        // Update expiration date if needed
+                        if (expiresDate && expiresDate.getTime() !== newExpiresDate.getTime()) {
+                          setValue(`certifications.${index}.expires`, newExpiresDate.toISOString().split("T")[0]);
+                        }
+                        
+                        // Update issue date
+                        field.onChange(newIssueDate.toISOString().split("T")[0]);
+                      }}
                       placeholder={t("selectIssueDate")}
                       data-testid={`certification-${index}-issueDate-input`}
                     />
@@ -846,7 +958,6 @@ export function CVForm({
                   </div>
                 )}
               </div>
-
               <div className="mb-4">
                 <Label
                   htmlFor={`certification-${index}-expirationDate`}
@@ -862,11 +973,27 @@ export function CVForm({
                     <MonthYearPicker
                       id={`certification-${index}-expirationDate`}
                       value={parseDate(field.value as string)}
-                      onChange={(date) =>
-                        field.onChange(
-                          date ? date.toISOString().split("T")[0] : ""
-                        )
-                      }
+                      onChange={(date) => {
+                        if (!date) {
+                          field.onChange("");
+                          return;
+                        }
+                        
+                        // Get the issue date for validation
+                        const issueDateField = control._formValues.certifications[index].date;
+                        const issueDate = parseDate(issueDateField);
+                        
+                        // Validate date order
+                        const { startDate: newIssueDate, endDate: newExpiresDate } = validateDateOrder(issueDate, date);
+                        
+                        // Update issue date if needed
+                        if (issueDate && issueDate.getTime() !== newIssueDate.getTime()) {
+                          setValue(`certifications.${index}.date`, newIssueDate.toISOString().split("T")[0]);
+                        }
+                        
+                        // Update expiration date
+                        field.onChange(newExpiresDate.toISOString().split("T")[0]);
+                      }}
                       placeholder={t("selectExpirationDate")}
                       data-testid={`certification-${index}-expirationDate-input`}
                     />
@@ -881,6 +1008,7 @@ export function CVForm({
               <Button
                 type="button"
                 variant="outline"
+                className="mt-4"
                 size="sm"
                 onClick={() => removeCertification(index)}
                 disabled={certificationFields.length === 1}
@@ -893,22 +1021,25 @@ export function CVForm({
           <Button
             type="button"
             variant="outline"
-            className="mt-4"
+            className="my-4"
+            size="sm"
             onClick={() =>
               appendCertification({
                 name: "",
                 issuer: "",
                 date: getCurrentDate(),
-                expires: getCurrentDate(),
               })
             }
           >
             {t("addCertification")}
           </Button>
         </FormCard>
-        <Button variant="outline" className="w-full" type="submit">
-          <SaveIcon className="w-4 h-4 mr-2" />
-          {submitLabel || t("submit")}
+        <Button
+          type="submit"
+          className="flex w-full justify-center my-4 px-8"
+          variant="outline"
+        >
+          <SaveIcon className="w-4 h-4 mr-2" /> {submitLabel || t("submit")}
         </Button>
       </form>
     </React.Fragment>
