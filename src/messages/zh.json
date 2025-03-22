@@ -236,6 +236,9 @@
     "education": "教育",
     "experience": "经验",
     "skills": "技能",
-    "resumePreview": "简历预览"
+    "resumePreview": "简历预览",
+    "resumeSaved": "简历数据保存成功！",
+    "resumeSavedButPDFGenerationFailed": "简历数据已保存，但PDF生成失败。您可以稍后再试。",
+    "failedToSaveResumeData": "保存简历数据失败。"
   }
 } 

@@ -163,7 +163,10 @@
     "education": "Education",
     "experience": "Experience",
     "skills": "Skills",
-    "resumePreview": "Resume Preview"
+    "resumePreview": "Resume Preview",
+    "resumeSaved": "Resume data saved successfully!",
+    "resumeSavedButPDFGenerationFailed": "Resume data saved but PDF generation failed. You can try again later.",
+    "failedToSaveResumeData": "Failed to save resume data."
   },
   "nav": {
     "home": "Home",

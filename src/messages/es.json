@@ -236,6 +236,9 @@
     "education": "Educación",
     "experience": "Experiencia",
     "skills": "Habilidades",
-    "resumePreview": "Vista Previa del Currículum"
+    "resumePreview": "Vista Previa del Currículum",
+    "resumeSaved": "¡Datos del currículum guardados correctamente!",
+    "resumeSavedButPDFGenerationFailed": "Datos del currículum guardados pero falló la generación del PDF. Puede intentarlo más tarde.",
+    "failedToSaveResumeData": "No se pudieron guardar los datos del currículum."
   }
 } 

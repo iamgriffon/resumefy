@@ -16,6 +16,7 @@ import { generateResumePDF } from "@/lib/pdf-generator";
 import { formatDate } from "@/lib/utils";
 import { useLocale } from "next-intl";
 import { toast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 export function CSVPreview() {
   const router = useRouter();
@@ -47,24 +48,28 @@ export function CSVPreview() {
         const pdf = await generateResumePDF(data as CVFormType, locale);
         pdf.save(`${data?.personalInfo?.fullName || "resume"}.pdf`);
         toast({
-          title: "Resume data saved and PDF generated successfully!",
+          title: t("resumeSaved"),
         });
       } catch (pdfError) {
         console.error("PDF generation failed:", pdfError);
         toast({
-          title: "Resume data saved but PDF generation failed. You can try again later.",
+          title: t("resumeSavedButPDFGenerationFailed"),
         });
       }
     } catch (err) {
       console.error("Error in saving resume:", err);
       toast({
-        title: "Failed to save resume data.",
+        title: t("failedToSaveResumeData"),
       });
     }
   };
 
   if (isLoading) {
-    return <div className="flex justify-center p-8">Loading preview...</div>;
+    return (
+      <div className="flex justify-center p-8">
+        <Loader2 className="w-10 h-10 animate-spin" />
+      </div>
+    );
   }
 
   if (error || !data) {
