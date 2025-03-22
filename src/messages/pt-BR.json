@@ -227,7 +227,7 @@
     "noImportedData": "Nenhum dado importado encontrado", 
     "unableToLoad": "Não foi possível carregar a visualização",
     "backToImport": "Voltar para Importar",
-    "missingFields": "Campos faltando no arquivo CSV:",
+    "missingFields": "Campos faltando:",
     "missingFieldsSkills": "Habilidades",
     "missingFieldsEducation": "Educação",
     "missingFieldsExperience": "Experiência",

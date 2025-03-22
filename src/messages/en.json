@@ -154,7 +154,7 @@
     "noImportedData": "No imported data found",
     "unableToLoad": "Unable to load preview",
     "backToImport": "Back to Import",
-    "missingFields": "Missing fields in CSV file:",
+    "missingFields": "Missing fields:",
     "missingFieldsSkills": "Skills",
     "missingFieldsEducation": "Education",
     "missingFieldsExperience": "Experience",

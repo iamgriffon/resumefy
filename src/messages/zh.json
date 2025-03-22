@@ -227,7 +227,7 @@
     "noImportedData": "未找到导入数据",
     "unableToLoad": "无法加载预览",
     "backToImport": "返回导入",
-    "missingFields": "CSV文件中缺少字段：",
+    "missingFields": "缺少字段：",
     "missingFieldsSkills": "技能",
     "missingFieldsEducation": "教育",
     "missingFieldsExperience": "经验",

@@ -8,14 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cvFormSchema, CVFormType } from "./schemas";
-import { useTranslations } from "use-intl";
+import { useLocale, useTranslations } from "use-intl";
 import { generateResumePDF } from "@/lib/pdf-generator";
 import { MonthYearPicker } from "@/components/ui/date-picker";
 import { SaveIcon, MinimizeIcon, MaximizeIcon } from "lucide-react";
 import { Checkbox } from "../ui/checkbox";
 import React, { useState, useMemo, useCallback } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FormCard } from "./cv-form/form-card";
+import { isBefore } from "date-fns";
 export function CVForm({
   initialData,
   onSubmit,
@@ -125,10 +126,13 @@ export function CVForm({
     return Object.values(collapsedSections).every((value) => value);
   }, [collapsedSections]);
 
+  const router = useRouter();
+  const locale = useLocale();
+
   const submit = (data: CVFormType) => {
     if (onSubmit) {
       try {
-        if (submitLabel === "Confirm & Download") {
+        if (pathname.includes("edit")) {
           generateResumePDF(data)
             .then((pdf) => {
               pdf.save(`${data.personalInfo?.fullName || "resume"}.pdf`);
@@ -139,7 +143,7 @@ export function CVForm({
               onSubmit(data);
             });
         } else {
-          // Just submit the data without PDF generation for edit flows
+          console.log("edit")
           onSubmit(data);
         }
       } catch (error) {
@@ -147,6 +151,8 @@ export function CVForm({
         onSubmit(data);
       }
     }
+    localStorage.setItem("importedCVData", JSON.stringify(data));
+    router.push(`/resume-builder/preview`);
   };
 
   return (
@@ -403,7 +409,6 @@ export function CVForm({
                           parseDate(new Date().toISOString().split("T")[0])
                         }
                         onChange={(date) => {
-                          console.log(date);
                           field.onChange(
                             date ? date.toISOString().split("T")[0] : ""
                           );
@@ -441,11 +446,20 @@ export function CVForm({
                           parseDate(field.value) ||
                           parseDate(new Date().toISOString().split("T")[0])
                         }
-                        onChange={(date) =>
-                          field.onChange(
-                            date ? date.toISOString().split("T")[0] : ""
-                          )
-                        }
+                          onChange={(date) => {
+                            if (!date) {
+                              field.onChange("");
+                              return;
+                            }
+                            
+                            const startDate = parseDate(control._formValues.education[index].startDate);
+                            if (startDate && isBefore(date, startDate)) {
+                              field.onChange(control._formValues.education[index].startDate);
+                              return;
+                            }
+                            
+                            field.onChange(date.toISOString().split("T")[0]);
+                          }}
                         placeholder={t("selectEndDate")}
                         data-testid={`education-${index}-endDate-input`}
                       />
@@ -497,7 +511,7 @@ export function CVForm({
                         if (checked) {
                           endDateField.onChange("present");
                         } else {
-                          endDateField.onChange(field.endDate);
+                          endDateField.onChange(parseDate(field.startDate));
                         }
                       }}
                     />
@@ -699,7 +713,7 @@ export function CVForm({
                         if (checked) {
                           endDateField.onChange("present");
                         } else {
-                          endDateField.onChange(field.endDate);
+                          endDateField.onChange(field.startDate);
                         }
                       }}
                     />
