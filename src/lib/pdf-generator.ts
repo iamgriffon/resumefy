@@ -1,10 +1,8 @@
 import { jsPDF } from "jspdf";
-import html2canvas from "html2canvas";
 import { CVFormType } from "@/components/resume/schemas";
 import { formatDate } from "./utils";
 import { parse } from "date-fns";
 
-// Resume translations mapping for multiple locales
 const resumeTranslations: Record<string, Record<string, string>> = {
   en: {
     professionalSummary: "PROFESSIONAL SUMMARY",
@@ -52,321 +50,329 @@ const resumeTranslations: Record<string, Record<string, string>> = {
     contact: "聯絡方式",
     expires: "過期",
     location: "位置",
-    phone: "電話",  
+    phone: "電話",
   },
 };
 
-// Add optional resumeElement parameter
 export const generateResumePDF = async (
   resumeData: CVFormType,
   locale: string = "en"
 ) => {
   try {
-    // Retrieve the translations for the current locale; default to English if not available.
     const translations = resumeTranslations[locale] || resumeTranslations.en;
-
-    // Create a temporary div for rendering the resume content
-    const tempElement = document.createElement("div");
-    tempElement.id = "temp-resume-container";
-    tempElement.className = "resume-preview";
-    tempElement.style.position = "absolute";
-    tempElement.style.width = "800px";
-    tempElement.style.left = "-9999px";
-    tempElement.style.top = "0";
-    tempElement.style.padding = "20px";
-    tempElement.style.backgroundColor = "white";
-    document.body.appendChild(tempElement);
-
-    // Generate a professional-looking ATS-optimized resume preview
-    tempElement.innerHTML = `
-      <div id="temp-resume-preview" style="width: 100%; padding: 30px; font-family: 'Calibri', 'Arial', sans-serif; color: #333333;">
-        <!-- Header with name and contact info -->
-        <div style="border-bottom: 2px solid #2c5282; padding-bottom: 15px; margin-bottom: 20px;">
-          <h1 style="font-size: 28px; margin: 0 0 10px 0; color: #2c5282;">${
-            resumeData.personalInfo?.fullName || "Resume"
-          }</h1>
-          <div style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 14px;">
-            ${
-              resumeData.personalInfo?.email
-                ? `<div style="margin-right: 15px;"><strong>Email:</strong> ${resumeData.personalInfo.email}</div>`
-                : ""
-            }
-            ${
-              resumeData.personalInfo?.phone
-                ? `<div style="margin-right: 15px;"><strong>${translations.phone}:</strong> ${resumeData.personalInfo.phone}</div>`
-                : ""
-            }
-            ${
-              resumeData.personalInfo?.location
-                ? `<div><strong>${translations.location}:</strong> ${resumeData.personalInfo.location}</div>`
-                : ""
-            }
-            ${
-              resumeData.personalInfo?.linkedIn
-                ? `<div><strong>LinkedIn:</strong> ${resumeData.personalInfo.linkedIn}</div>`
-                : ""
-            }
-          </div>
-        </div>
-        
-        <!-- ${translations.professionalSummary} -->
-        ${
-          resumeData.personalInfo?.summary
-            ? `
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${translations.professionalSummary}</h2>
-          <p style="margin: 0; line-height: 1.5;">${resumeData.personalInfo.summary}</p>
-        </div>
-        `
-            : ""
-        }
-        
-        <!-- ${translations.workExperience} -->
-        ${
-          resumeData.experience && resumeData.experience.length > 0
-            ? `
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
-            translations.workExperience
-          }</h2>
-          ${resumeData.experience
-            .map(
-              (exp) => `
-            <div style="margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <div style="font-weight: bold;">${exp.position || ""} @ <em>${
-                exp.company || ""
-              }</em></div>
-                <div>${
-                  exp.startDate
-                    ? formatDate(
-                        parse(exp.startDate, "yyyy-MM", new Date()),
-                        "MMM/yyyy",
-                        locale
-                      )
-                    : ""
-                } - ${
-                exp.endDate
-                  ? formatDate(
-                      parse(exp.endDate, "yyyy-MM", new Date()),
-                      "MMM/yyyy",
-                      locale
-                    )
-                  : ""
-              }</div>
-              </div>
-              <p style="margin: 0; line-height: 1.4;">${
-                exp.description || ""
-              }</p>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-        `
-            : ""
-        }
-        
-        <!-- ${translations.education} -->
-        ${
-          resumeData.education && resumeData.education.length > 0
-            ? `
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
-            translations.education
-          }</h2>
-          ${resumeData.education
-            .map(
-              (edu) => `
-            <div style="margin-bottom: 15px;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                <div style="font-weight: bold;">${edu.degree || ""} - ${
-                edu.fieldOfStudy
-              }
-                <em> @ ${edu.institution || ""} </em>
-                </div>
-                <div>${
-                  formatDate(edu.startDate || "", "MMM/yyyy", locale) || ""
-                } - ${
-                formatDate(edu.endDate || "", "MMM/yyyy", locale) || ""
-              }</div>
-              </div>
-              <div style="margin-bottom: 5px;">${edu.description || ""}</div>
-            </div>
-          `
-            )
-            .join("")}
-        </div>
-        `
-            : ""
-        }
-        
-        <!-- ${translations.skills} -->
-        ${
-          resumeData.skills && resumeData.skills.skills
-            ? `
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
-            translations.skills
-          }</h2>
-          <div style="column-width: 150px; column-gap: 20px;">
-            ${resumeData.skills.skills
-              .split(",")
-              .map(
-                (skill) =>
-                  `<div style="margin-bottom: 8px; font-weight: medium; font-size: 16px;">${skill.trim()}</div>`
-              )
-              .join("")}
-          </div>
-        </div>
-        `
-            : ""
-        }
-
-        <!-- ${translations.certifications} -->
-        ${
-          resumeData.certifications && resumeData.certifications.length > 0
-            ? `
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${
-            translations.certifications
-          }</h2>
-          <div>
-            ${resumeData.certifications
-              .map(
-                (cert) => `
-              <div style="margin-bottom: 12px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                  <div style="font-weight: bold;">${cert.name || ""}</div>
-                  <div>${cert.date || ""}</div>
-                </div>
-                <div style="margin-bottom: 5px;">${cert.issuer || ""}</div>
-                ${
-                  cert.expires
-                    ? `<div style="font-style: italic; font-size: 14px;">${translations.expires}: ${cert.expires}</div>`
-                    : ""
-                }
-              </div>
-            `
-              )
-              .join("")}
-          </div>
-        </div>
-        `
-            : ""
-        }
-
-        <!-- ${translations.additionalInformation} -->
-        ${
-          resumeData.additionalInfo
-            ? `
-        <div style="margin-bottom: 25px;">
-          <h2 style="font-size: 18px; margin: 0 0 10px 0; color: #2c5282; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px;">${translations.additionalInformation}</h2>
-          <p style="margin: 0; line-height: 1.5;">${resumeData.additionalInfo}</p>
-        </div>
-        `
-            : ""
-        }
-
-        <!-- Hidden ATS keywords for better parsing -->
-        <div style="color: white; font-size: 1px; line-height: 1px;">
-          ${resumeData.personalInfo?.fullName || ""}
-          ${resumeData.personalInfo?.email || ""}
-          ${resumeData.personalInfo?.phone || ""}
-          ${resumeData.personalInfo?.location || ""}
-          ${resumeData.personalInfo?.linkedIn || ""}
-          ${resumeData.personalInfo?.summary || ""}
-          ${resumeData.skills?.skills || ""}
-          ${
-            resumeData.experience
-              ?.map(
-                (exp) => `${exp.company} ${exp.position} ${exp.description}`
-              )
-              .join(" ") || ""
-          }
-          ${
-            resumeData.education
-              ?.map(
-                (edu) => `${edu.institution} ${edu.degree} ${edu.fieldOfStudy}`
-              )
-              .join(" ") || ""
-          }
-          ${
-            resumeData.certifications
-              ?.map((cert) => `${cert.name} ${cert.issuer}`)
-              .join(" ") || ""
-          }
-          ${resumeData.additionalInfo || ""}
-        </div>
-      </div>
-    `;
-
-    // Allow a moment for the content to render
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    const elementToCapture = document.getElementById("temp-resume-preview");
-    if (!elementToCapture) throw new Error("Resume preview element not found");
-
-    // Generate a canvas of the temporary element
-    const canvas = await html2canvas(elementToCapture, {
-      scale: 1.5,
-      useCORS: true,
-      logging: false,
-      backgroundColor: "#ffffff",
-    });
-
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    if (imgWidth <= 0 || imgHeight <= 0)
-      throw new Error("Invalid canvas dimensions");
-
-    const imgData = canvas.toDataURL("image/jpeg", 0.8);
-
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
 
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-    const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight) * 0.95;
-    const imgX = (pdfWidth - imgWidth * ratio) / 2;
-    const imgY = 5; // top margin
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const contentWidth = pageWidth - margin * 2;
 
-    if (
-      isNaN(imgX) ||
-      isNaN(imgY) ||
-      isNaN(imgWidth * ratio) ||
-      isNaN(imgHeight * ratio) ||
-      !isFinite(imgX) ||
-      !isFinite(imgY) ||
-      !isFinite(imgWidth * ratio) ||
-      !isFinite(imgHeight * ratio) ||
-      imgX < 0 ||
-      imgY < 0 ||
-      imgWidth * ratio <= 0 ||
-      imgHeight * ratio <= 0
-    ) {
-      throw new Error("Invalid PDF coordinates calculated");
+    let yPosition = margin;
+
+    pdf.setFontSize(24);
+    pdf.setTextColor(44, 82, 130); // #2c5282
+    pdf.text(resumeData.personalInfo?.fullName || "Resume", margin, yPosition);
+    yPosition += 10;
+
+    pdf.setFontSize(10);
+    pdf.setTextColor(51, 51, 51); // #333333
+    if (resumeData.personalInfo?.email) {
+      pdf.setFont("Helvetica", "bold");
+      pdf.text("Email:", margin, yPosition);
+      pdf.setFont("Helvetica", "normal");
+      const emailLabelWidth = pdf.getTextWidth("Email:");
+      pdf.text(
+        resumeData.personalInfo.email,
+        margin + emailLabelWidth + 2,
+        yPosition
+      );
+      yPosition += 5;
     }
 
-    pdf.addImage(
-      imgData,
-      "JPEG",
-      imgX,
-      imgY,
-      imgWidth * ratio,
-      imgHeight * ratio,
-      undefined,
-      "FAST"
-    );
+    if (resumeData.personalInfo?.phone) {
+      pdf.setFont("Helvetica", "bold");
+      pdf.text(`${translations.phone}:`, margin, yPosition);
+      pdf.setFont("Helvetica", "normal");
+      const phoneLabelWidth = pdf.getTextWidth(`${translations.phone}:`);
+      pdf.text(
+        resumeData.personalInfo.phone,
+        margin + phoneLabelWidth + 2,
+        yPosition
+      );
+      yPosition += 5;
+    }
 
-    // Add optimized hidden text for ATS parsing using locale-specific text
-    addOptimizedATSText(pdf, resumeData, translations);
+    if (resumeData.personalInfo?.location) {
+      pdf.setFont("Helvetica", "bold");
+      pdf.text(`${translations.location}:`, margin, yPosition);
+      pdf.setFont("Helvetica", "normal");
+      const locationLabelWidth = pdf.getTextWidth(`${translations.location}:`);
+      pdf.text(
+        resumeData.personalInfo.location,
+        margin + locationLabelWidth + 2,
+        yPosition
+      );
+      yPosition += 5;
+    }
 
-    // Clean up temporary element
-    document.body.removeChild(tempElement);
+    if (resumeData.personalInfo?.linkedIn) {
+      pdf.setFont("Helvetica", "bold");
+      pdf.text("LinkedIn:", margin, yPosition);
+      pdf.setFont("Helvetica", "normal");
+      const linkedInLabelWidth = pdf.getTextWidth("LinkedIn:");
+      const linkedInText = resumeData.personalInfo.linkedIn;
+      pdf.setFont("Helvetica", "italic");
+      pdf.setTextColor(44, 82, 130); // #2c5282
+      pdf.textWithLink(
+        linkedInText,
+        margin + linkedInLabelWidth + 2,
+        yPosition,
+        {
+          url: linkedInText.startsWith("http")
+            ? linkedInText
+            : `https://${linkedInText}`,
+        }
+      );
+      yPosition += 5;
+    }
+    yPosition += 3;
+
+    pdf.setFont("Helvetica", "normal");
+    pdf.setDrawColor(44, 82, 130); // #2c5282
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 10;
+
+    const truncateText = (text: string, maxWidth: number): string => {
+      if (pdf.getTextWidth(text) <= maxWidth) return text;
+
+      const ellipsis = "...";
+      let truncated = text;
+      while (
+        truncated.length > 3 &&
+        pdf.getTextWidth(truncated + ellipsis) > maxWidth
+      ) {
+        truncated = truncated.slice(0, -1);
+      }
+      return truncated + ellipsis;
+    };
+
+    const addSectionTitle = (title: string) => {
+      if (yPosition > margin + 15) {
+        yPosition += 2;
+      }
+
+      pdf.setFontSize(14);
+      pdf.setTextColor(44, 82, 130); // #2c5282
+      pdf.text(title, margin, yPosition);
+      yPosition += 2;
+
+      pdf.setDrawColor(226, 232, 240); // #e2e8f0
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 8;
+    };
+
+    const addContent = (text: string, fontSize = 10) => {
+      if (!text) return;
+
+      pdf.setFontSize(fontSize);
+      pdf.setTextColor(51, 51, 51); // #333333
+
+      const textLines = pdf.splitTextToSize(text, contentWidth);
+      pdf.text(textLines, margin, yPosition);
+      yPosition += textLines.length * 5 + 5;
+
+      if (yPosition > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+    };
+
+    if (resumeData.personalInfo?.summary) {
+      addSectionTitle(translations.professionalSummary);
+      addContent(resumeData.personalInfo.summary);
+      yPosition += 2;
+    }
+
+    if (resumeData.experience && !!resumeData.experience.length) {
+      addSectionTitle(translations.workExperience);
+
+      for (const exp of resumeData.experience) {
+        pdf.setFontSize(12);
+        pdf.setFont("Helvetica", "bold");
+        pdf.setTextColor(51, 51, 51);
+
+        const position = `${exp.position || ""} @ ${exp.company || ""}`;
+        const dateRange = `${
+          exp.startDate
+            ? formatDate(
+                parse(exp.startDate, "yyyy-MM", new Date()),
+                "MMM/yyyy",
+                locale
+              )
+            : ""
+        } - ${
+          exp.endDate
+            ? formatDate(
+                parse(exp.endDate, "yyyy-MM", new Date()),
+                "MMM/yyyy",
+                locale
+              )
+            : ""
+        }`;
+
+        const dateWidth = pdf.getTextWidth(dateRange);
+        const padding = 10;
+        const maxPositionWidth = pageWidth - 2 * margin - dateWidth - padding;
+
+        const truncatedPosition = truncateText(position, maxPositionWidth);
+        pdf.text(truncatedPosition, margin, yPosition);
+        pdf.text(dateRange, pageWidth - margin - dateWidth, yPosition);
+        yPosition += 5;
+
+        if (exp.description) {
+          yPosition += 1;
+          pdf.setFont("Helvetica", "normal");
+          addContent(exp.description);
+        } else {
+          yPosition += 5;
+        }
+      }
+      yPosition += 2;
+    }
+
+    if (resumeData.education && !!resumeData.education.length) {
+      addSectionTitle(translations.education);
+
+      for (const edu of resumeData.education) {
+        pdf.setFontSize(12);
+        pdf.setFont("Helvetica", "bold");
+        pdf.setTextColor(51, 51, 51);
+
+        const degreeText = `${edu.degree || ""} @ ${edu.institution}`;
+        const dateRange = `${
+          formatDate(edu.startDate || "", "MMM/yyyy", locale) || ""
+        } - ${formatDate(edu.endDate || "", "MMM/yyyy", locale) || ""}`;
+
+        const dateWidth = pdf.getTextWidth(dateRange);
+        const padding = 10;
+        const maxDegreeWidth = pageWidth - 2 * margin - dateWidth - padding;
+
+        const truncatedDegree = truncateText(degreeText, maxDegreeWidth);
+        pdf.text(truncatedDegree, margin, yPosition);
+        pdf.text(dateRange, pageWidth - margin - dateWidth, yPosition);
+
+        yPosition += 5;
+
+        if (edu.fieldOfStudy) {
+          yPosition += 1;
+          pdf.setFontSize(11);
+          pdf.setFont("Helvetica", "normal");
+          pdf.text(edu.fieldOfStudy, margin, yPosition);
+          yPosition += 8;
+        }
+
+        if (edu.description) {
+          pdf.setFont("Helvetica", "italic");
+          addContent(edu.description);
+        } else {
+          yPosition += 5;
+        }
+      }
+      yPosition += 2;
+    }
+
+    pdf.setFont("Helvetica", "normal");
+    if (resumeData.skills && resumeData.skills.skills) {
+      addSectionTitle(translations.skills);
+
+      const skills = resumeData.skills.skills
+        .split(",")
+        .map((skill) => skill.trim());
+      const skillsPerColumn = Math.ceil(skills.length / 3);
+      const columnWidth = contentWidth / 3;
+
+      let columnCount = 0;
+      let currentColumn = 0;
+
+      const startY = yPosition;
+
+      for (const skill of skills) {
+        const xPosition = margin + currentColumn * columnWidth;
+        pdf.setFontSize(10);
+        pdf.setTextColor(51, 51, 51);
+        pdf.text(`• ${skill}`, xPosition, yPosition);
+
+        columnCount++;
+
+        if (columnCount >= skillsPerColumn) {
+          columnCount = 0;
+          currentColumn++;
+
+          if (currentColumn >= 3) {
+            currentColumn = 0;
+            yPosition += 5;
+          } else {
+            yPosition = startY;
+          }
+        } else {
+          yPosition += 5;
+        }
+      }
+
+      if (currentColumn > 0) {
+        yPosition = startY + skillsPerColumn * 5;
+      }
+
+      yPosition += 8;
+    }
+
+    if (resumeData.certifications && !!resumeData.certifications.length) {
+      addSectionTitle(translations.certifications);
+
+      for (const cert of resumeData.certifications) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(51, 51, 51);
+        pdf.text(cert.name || "", margin, yPosition);
+
+        if (cert.date) {
+          const dateWidth = pdf.getTextWidth(cert.date);
+          pdf.text(cert.date, pageWidth - margin - dateWidth, yPosition);
+        }
+        yPosition += 5;
+
+        if (cert.issuer) {
+          pdf.setFontSize(10);
+          pdf.text(cert.issuer, margin, yPosition);
+          yPosition += 5;
+        }
+
+        if (cert.expires) {
+          pdf.setFontSize(9);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(
+            `${translations.expires}: ${cert.expires}`,
+            margin,
+            yPosition
+          );
+          yPosition += 5;
+        }
+
+        yPosition += 3;
+      }
+      yPosition += 2; // Extra spacing at the end of section
+    }
+
+    if (resumeData.additionalInfo) {
+      addSectionTitle(translations.additionalInformation);
+      addContent(resumeData.additionalInfo);
+    }
+
+    addATSOptimizationTags(pdf, resumeData);
+
     return pdf;
   } catch (error) {
     console.error("Error generating PDF:", error);
@@ -375,52 +381,22 @@ export const generateResumePDF = async (
   }
 };
 
-// Early return is used in the loop below to skip empty sections.
-function addOptimizedATSText(
-  pdf: jsPDF,
-  data: CVFormType,
-  translations: Record<string, string>
-) {
-  pdf.setFontSize(1); // Extremely small font
-  pdf.setTextColor(255, 255, 255); // White color (invisible)
+function addATSOptimizationTags(pdf: jsPDF, data: CVFormType) {
+  pdf.setProperties({
+    title: `Resume - ${data.personalInfo?.fullName || ""}`,
+    subject: data.personalInfo?.summary || "",
+    keywords: data.skills?.skills || "",
+    creator: "Resumefy by iamgriffon",
+  });
 
-  const pdfHeight = pdf.internal.pageSize.getHeight();
-  let y = pdfHeight - 10; // Position at bottom of page
-  const lineHeight = 1;
-
-  const sections = [
-    translations.contact,
-    `${data.personalInfo?.fullName || ""} | ${
-      data.personalInfo?.email || ""
-    } | ${data.personalInfo?.phone || ""} | ${
-      data.personalInfo?.linkedIn || ""
-    }`,
-    translations.workExperience,
-    data.experience
-      ?.map(
-        (exp) =>
-          `${exp.position} at ${exp.company} (${exp.startDate}-${exp.endDate})`
-      )
-      .join(" | ") || "",
-    translations.education,
-    data.education
-      ?.map(
-        (edu) => `${edu.degree} in ${edu.fieldOfStudy} at ${edu.institution}`
-      )
-      .join(" | ") || "",
-    translations.skills,
+  const tagsToAdd = [
+    data.personalInfo?.fullName || "",
+    data.personalInfo?.email || "",
+    data.personalInfo?.phone || "",
     data.skills?.skills || "",
-    translations.certifications,
-    data.certifications
-      ?.map((cert) => `${cert.name} from ${cert.issuer} (${cert.date})`)
-      .join(" | ") || "",
-    translations.additionalInformation,
-    data.additionalInfo || "",
   ];
 
-  for (const section of sections) {
-    if (!section) continue;
-    pdf.text(section, 10, y);
-    y += lineHeight;
-  }
+  pdf.setFontSize(0.1);
+  pdf.setTextColor(255, 255, 255);
+  pdf.text(tagsToAdd.join(", "), 1, 1);
 }
