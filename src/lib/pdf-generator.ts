@@ -161,6 +161,11 @@ export const generateResumePDF = async (
     };
 
     const addSectionTitle = (title: string) => {
+      if (yPosition > pageHeight - margin - 30) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
       if (yPosition > margin + 15) {
         yPosition += 2;
       }
@@ -182,13 +187,14 @@ export const generateResumePDF = async (
       pdf.setTextColor(51, 51, 51); // #333333
 
       const textLines = pdf.splitTextToSize(text, contentWidth);
-      pdf.text(textLines, margin, yPosition);
-      yPosition += textLines.length * 5 + 5;
-
-      if (yPosition > pageHeight - margin) {
+      
+      if (yPosition + (textLines.length * 5) > pageHeight - margin) {
         pdf.addPage();
         yPosition = margin;
       }
+      
+      pdf.text(textLines, margin, yPosition);
+      yPosition += textLines.length * 5 + 5;
     };
 
     if (resumeData.personalInfo?.summary) {
@@ -201,6 +207,17 @@ export const generateResumePDF = async (
       addSectionTitle(translations.workExperience);
 
       for (const exp of resumeData.experience) {
+        const estimatedHeight = 20; // Base height for company and date
+        const descriptionLines = exp.description 
+          ? pdf.splitTextToSize(exp.description, contentWidth).length
+          : 0;
+        const totalEstimatedHeight = estimatedHeight + (descriptionLines * 5);
+        
+        if (yPosition + totalEstimatedHeight > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
         pdf.setFontSize(12);
         pdf.setFont("Helvetica", "bold");
         pdf.setTextColor(51, 51, 51);
@@ -248,6 +265,17 @@ export const generateResumePDF = async (
       addSectionTitle(translations.education);
 
       for (const edu of resumeData.education) {
+        const estimatedHeight = 20; // Base height for degree and date
+        const descriptionLines = edu.description 
+          ? pdf.splitTextToSize(edu.description, contentWidth).length
+          : 0;
+        const totalEstimatedHeight = estimatedHeight + (descriptionLines * 5);
+        
+        if (yPosition + totalEstimatedHeight > pageHeight - margin) {
+          pdf.addPage();
+          yPosition = margin;
+        }
+
         pdf.setFontSize(12);
         pdf.setFont("Helvetica", "bold");
         pdf.setTextColor(51, 51, 51);
@@ -287,13 +315,16 @@ export const generateResumePDF = async (
 
     pdf.setFont("Helvetica", "normal");
     if (resumeData.skills && resumeData.skills.skills) {
-      addSectionTitle(translations.skills);
-
-      const skills = resumeData.skills.skills
-        .split(",")
-        .map((skill) => skill.trim());
+      const skills = resumeData.skills.skills.split(",").map((skill) => skill.trim());
       const skillsPerColumn = Math.ceil(skills.length / 3);
-      const columnWidth = contentWidth / 3;
+      const estimatedHeight = skillsPerColumn * 5 + 15; // Height per item + padding
+      
+      if (yPosition + estimatedHeight > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      addSectionTitle(translations.skills);
 
       let columnCount = 0;
       let currentColumn = 0;
@@ -301,7 +332,7 @@ export const generateResumePDF = async (
       const startY = yPosition;
 
       for (const skill of skills) {
-        const xPosition = margin + currentColumn * columnWidth;
+        const xPosition = margin + currentColumn * (contentWidth / 3);
         pdf.setFontSize(10);
         pdf.setTextColor(51, 51, 51);
         pdf.text(`• ${skill}`, xPosition, yPosition);
@@ -331,6 +362,15 @@ export const generateResumePDF = async (
     }
 
     if (resumeData.certifications && !!resumeData.certifications.length) {
+      const certHeight = resumeData.certifications.reduce((total, cert) => {
+        return total + 15 + (cert.issuer ? 5 : 0) + (cert.expires ? 5 : 0);
+      }, 10);
+      
+      if (yPosition + certHeight > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
       addSectionTitle(translations.certifications);
 
       for (const cert of resumeData.certifications) {
@@ -367,6 +407,14 @@ export const generateResumePDF = async (
     }
 
     if (resumeData.additionalInfo) {
+      const infoLines = pdf.splitTextToSize(resumeData.additionalInfo, contentWidth).length;
+      const infoHeight = infoLines * 5 + 15;
+      
+      if (yPosition + infoHeight > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
       addSectionTitle(translations.additionalInformation);
       addContent(resumeData.additionalInfo);
     }
