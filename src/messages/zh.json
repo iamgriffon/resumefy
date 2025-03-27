@@ -239,6 +239,8 @@
     "resumePreview": "简历预览",
     "resumeSaved": "简历数据保存成功！",
     "resumeSavedButPDFGenerationFailed": "简历数据已保存，但PDF生成失败。您可以稍后再试。",
-    "failedToSaveResumeData": "保存简历数据失败。"
+    "failedToSaveResumeData": "保存简历数据失败。",
+    "exportCsv": "导出CSV",
+    "csvExportSuccess": "简历已成功导出为CSV"
   }
 } 

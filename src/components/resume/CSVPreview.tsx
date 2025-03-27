@@ -64,10 +64,79 @@ export function CSVPreview() {
     }
   };
 
+  const exportToCSV = () => {
+    if (!data) return;
+
+    const csvRows = [];
+    csvRows.push("Section,Field,Value");
+
+    if (data.personalInfo) {
+      Object.entries(data.personalInfo).forEach(([key, value]) => {
+        if (value) {
+          csvRows.push(
+            `Personal Info,${key},"${String(value).replace(/"/g, '""')}"`
+          );
+        }
+      });
+    }
+
+    if (data.education && data.education.length > 0) {
+      data.education.forEach((edu, index) => {
+        Object.entries(edu).forEach(([key, value]) => {
+          if (value) {
+            csvRows.push(
+              `Education ${index + 1},${key},"${String(value).replace(
+                /"/g,
+                '""'
+              )}"`
+            );
+          }
+        });
+      });
+    }
+
+    if (data.experience && data.experience.length > 0) {
+      data.experience.forEach((exp, index) => {
+        Object.entries(exp).forEach(([key, value]) => {
+          if (value) {
+            csvRows.push(
+              `Experience ${index + 1},${key},"${String(value).replace(
+                /"/g,
+                '""'
+              )}"`
+            );
+          }
+        });
+      });
+    }
+
+    if (data.skills && data.skills.skills) {
+      csvRows.push(`Skills,skills,"${data.skills.skills.replace(/"/g, '""')}"`);
+    }
+
+    const csvContent = csvRows.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `${data.personalInfo?.fullName || "resume"}.csv`
+    );
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: t("csvExportSuccess") || "Resume exported to CSV successfully",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center p-8">
-        <Loader2 className="w-10 h-10 animate-spin" />
+        <Loader2 className="w-10 h-10 animate-spin" />  
       </div>
     );
   }
@@ -248,6 +317,13 @@ export function CSVPreview() {
             variant="link"
           >
             {t("edit")}
+          </Button>
+          <Button
+            onClick={exportToCSV}
+            data-testid="export-csv-button"
+            variant="link"
+          >
+            {t("exportCsv")}
           </Button>
           <Button
             data-testid="confirm-button"

@@ -239,6 +239,8 @@
     "resumePreview": "Prévia do Currículo",
     "resumeSaved": "Dados do currículo salvos com sucesso!",
     "resumeSavedButPDFGenerationFailed": "Dados do currículo salvos, mas a geração do PDF falhou. Você pode tentar novamente mais tarde.",
-    "failedToSaveResumeData": "Falha ao salvar os dados do currículo."
+    "failedToSaveResumeData": "Falha ao salvar os dados do currículo.",
+    "exportCsv": "Exportar CSV",
+    "csvExportSuccess": "Currículo exportado para CSV com sucesso"
   }
 }
